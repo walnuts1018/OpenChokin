@@ -53,6 +53,15 @@ jobs:
           path: "front/node_modules"
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('front/package-lock.json') }}
 
+      - name: Cache next
+        id: next-cache
+        env:
+          cache-name: cache-next
+        uses: actions/cache@v3
+        with:
+          path: "front/.next/cache"
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('front/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+
       - name: npm install
         working-directory: ./front
         run: npm install
