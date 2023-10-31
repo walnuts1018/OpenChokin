@@ -17,7 +17,7 @@ const NunitoFont = Nunito({
   variable: "--font-Nunito",
 });
 const NotoFont = Noto_Sans_JP({
-  weight: ["400", "500"],
+  weight: ["400", "700"],
   subsets: ["latin"],
   variable: "--font-Noto",
 });
