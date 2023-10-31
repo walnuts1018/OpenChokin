@@ -51,11 +51,11 @@ jobs:
           path: "front/node_modules"
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('front/package-lock.json') }}
 
-      - name: install
+      - name: npm install
         working-directory: ./front
         run: npm install
 
-      - name: build
+      - name: npm build
         working-directory: ./front
         run: npm run build
 
@@ -65,6 +65,7 @@ jobs:
           push: true
           context: .
           platforms: linux/amd64,linux/arm64
+          file: ./front-prod.Dockerfile
           tags: |
             ghcr.io/walnuts1018/openchokin/front:latest
             ghcr.io/walnuts1018/openchokin/front:v0.0.0-${{ github.sha }}-${{ github.run_number }}
