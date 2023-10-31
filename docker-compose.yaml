@@ -1,0 +1,46 @@
+# This is for debugging purposes only
+# DO NOT USE IN PRODUCTION
+version: "3"
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Back.Dockerfile
+    container_name: openchokin-backend
+    ports:
+      - "8080:8080"
+    networks:
+      - openchokin-network
+    tty: true
+    environment:
+      POSTGRES_ADMIN_USER: postgres
+      POSTGRES_ADMIN_PASSWORD: passwd
+      POSTGRES_USER: openchokin
+      POSTGRES_PASSWORD: passwd
+      POSTGRES_DB: sample-db
+      POSTGRES_HOST: openchokin-db
+      POSTGRES_PORT: 5432
+  db:
+    image: postgres:15.4
+    container_name: openchokin-db
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: passwd
+    networks:
+      - openchokin-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Front-dev.Dockerfile
+    container_name: openchokin-frontend
+    ports:
+      - "3000:3000"
+    networks:
+      - openchokin-network
+    tty: true
+networks:
+  openchokin-network:
+    driver: bridge
