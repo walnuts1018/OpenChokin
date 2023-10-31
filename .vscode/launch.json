@@ -6,7 +6,7 @@
       "type": "go",
       "request": "launch",
       "mode": "auto",
-      "program": "${workspaceFolder}/Back/main.go"
+      "program": "${workspaceFolder}/back/main.go"
     }
   ]
 }

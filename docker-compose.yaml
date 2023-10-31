@@ -5,7 +5,7 @@ services:
   server:
     build:
       context: .
-      dockerfile: Back.Dockerfile
+      dockerfile: back-dev.Dockerfile
     container_name: openchokin-backend
     ports:
       - "8080:8080"
@@ -20,6 +20,10 @@ services:
       POSTGRES_DB: sample-db
       POSTGRES_HOST: openchokin-db
       POSTGRES_PORT: 5432
+    volumes:
+      - type: bind
+        source: "./back"
+        target: "/app"
   db:
     image: postgres:15.4
     container_name: openchokin-db
@@ -34,13 +38,17 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Front-dev.Dockerfile
+      dockerfile: front-dev.Dockerfile
     container_name: openchokin-frontend
     ports:
       - "3000:3000"
     networks:
       - openchokin-network
     tty: true
+    volumes:
+      - type: bind
+        source: "./front"
+        target: "/app"
 networks:
   openchokin-network:
     driver: bridge
