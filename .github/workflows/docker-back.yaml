@@ -60,7 +60,7 @@ jobs:
         env:
           CGO_ENABLED: 0
           GOOS: linux
-        run: go build -o server $ROOT/main.go
+        run: go build -o server main.go
 
       - name: Build and push Docker images
         uses: docker/build-push-action@v4.0.0
