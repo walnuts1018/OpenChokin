@@ -3,9 +3,9 @@
 FROM alpine:3
 WORKDIR /app
 
-COPY server ./
+COPY back/server ./
 RUN chmod +x ./server
-COPY server/zoneinfo/Asia/Tokyo /usr/share/zoneinfo/Asia/Tokyo
+COPY back/zoneinfo/Asia/Tokyo /usr/share/zoneinfo/Asia/Tokyo
 
 CMD ["./server"]
 LABEL org.opencontainers.image.source = "https://github.com/walnuts1018/openchokin"
