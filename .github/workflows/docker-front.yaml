@@ -42,6 +42,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: front
 
       - name: Cache node_modules
         id: node_modules_cache_id
