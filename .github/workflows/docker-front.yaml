@@ -1,4 +1,4 @@
-name: Build Docker Image
+name: Build openchokin/front Docker Image
 on:
   push:
     branches:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   ImageBuild:
-    name: Build Walnuts.dev Docker Image
+    name: Build openchokin/front Docker Image
     runs-on: ubuntu-latest
     steps:
       - name: Slack notification of build start
@@ -17,7 +17,7 @@ jobs:
           SLACK_USERNAME: GitHub Actions
           SLACK_COLOR: "#4381de"
           SLACK_ICON: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          SLACK_TITLE: Start Walnuts.dev image build
+          SLACK_TITLE: Start openchokin/front image build
           SLACK_MESSAGE: |
             Run number : #${{ github.run_number }}
 
@@ -66,8 +66,8 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/walnuts1018/walnuts.dev:latest
-            ghcr.io/walnuts1018/walnuts.dev:${{ github.sha }}-${{ github.run_number }}
+            ghcr.io/walnuts1018/openchokin/front:latest
+            ghcr.io/walnuts1018/openchokin/front:${{ github.sha }}-${{ github.run_number }}
 
   SucceessNotification:
     if: ${{ success() }}
@@ -81,9 +81,10 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_USERNAME: GitHub Actions
           SLACK_ICON: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          SLACK_TITLE: Walnuts.dev image build succeeded
+          SLACK_TITLE: openchokin/front image build succeeded
           SLACK_MESSAGE: |
-            Image: Walnuts.dev
+            openchokin/front image build succeeded
+            Image: openchokin/front
             Run number : #${{ github.run_number }}
 
   FailureAlert:
@@ -98,8 +99,9 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_USERNAME: GitHub Actions
           SLACK_ICON: "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png"
-          SLACK_TITLE: Walnuts.dev image build failed
+          SLACK_TITLE: openchokin/front image build failed
           SLACK_COLOR: danger
           SLACK_MESSAGE: |
-            Image: Walnuts.dev
+            openchokin/front image build failed
+            Image: openchokin/front
             Run number : #${{ github.run_number }}
