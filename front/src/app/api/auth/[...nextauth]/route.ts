@@ -3,9 +3,9 @@ import { JWT } from "next-auth/jwt";
 import ZitadelProvider from "next-auth/providers/zitadel";
 import { custom } from 'openid-client';
 
-const client_id = process.env.ZITADEL_CLIENT_ID;
-const client_secret = process.env.ZITADEL_CLIENT_SECRET;
-const zitadel_url = process.env.ZITADEL_URL;
+var client_id = process.env.ZITADEL_CLIENT_ID;
+var client_secret = process.env.ZITADEL_CLIENT_SECRET;
+var zitadel_url = process.env.ZITADEL_URL;
 
 if (!client_id || !client_secret) {
   throw new Error("ZITADEL_CLIENT_ID and ZITADEL_CLIENT_SECRET must be set");
