@@ -14,7 +14,7 @@ custom.setHttpOptionsDefaults({
   timeout: 10000,
 });
 
-export const authOptions = {
+const authOptions = {
   providers: [
     ZitadelProvider({
       clientId: client_id,
