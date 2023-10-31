@@ -1,4 +1,4 @@
-module github.com/walnuts1018/openchokin/backend
+module github.com/walnuts1018/openchokin/back
 
 go 1.21.3
 
