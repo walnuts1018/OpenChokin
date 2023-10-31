@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { signIn, signOut } from "next-auth/react";
-
+import { LoginButton, LogoutButton } from "./authbuttons";
 export function Header() {
   return (
     <>
@@ -22,18 +21,8 @@ export function Header() {
               </Link>
             </div>
             <div className="flex items-center space-x-2 font-Noto font-semibold text-xl">
-              <Link
-                className="bg-white hover:bg-gray-100 rounded-full  text-[#f9842c] px-4 py-1 border-[#f9842c] border-2"
-                href="/signin"
-              >
-                ログイン
-              </Link>
-              <Link
-                className="bg-[#f9842c] hover:bg-[#FA6C28] rounded-full  text-white px-4 py-1 border-[#f9842c] border-2"
-                href="/signup"
-              >
-                新規登録
-              </Link>
+              <LoginButton />
+              <LogoutButton />
             </div>
           </div>
         </div>
