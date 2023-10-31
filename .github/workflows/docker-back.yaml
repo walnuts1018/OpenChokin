@@ -1,4 +1,4 @@
-name: Build openchokin/back Docker Image
+name: Backend Docker Image Build
 on:
   push:
     branches:

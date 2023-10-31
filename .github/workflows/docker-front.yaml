@@ -1,4 +1,4 @@
-name: Build openchokin/front Docker Image
+name: Front Docker Image Build
 on:
   push:
     branches:
