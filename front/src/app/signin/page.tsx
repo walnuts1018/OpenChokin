@@ -1,19 +1,23 @@
-import { LoginButton, LogoutButton } from "../authbuttons";
+"use client";
+import ZitadelForm from "./Zitadelform";
 
-export default async function Home() {
+export default function Page({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
+  const callbackUrl = searchParams.callbackUrl;
+
   return (
-    <main
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "70vh",
-      }}
-    >
-      <div>
-        <LoginButton />
-        <LogoutButton />
+    <div className="page h-screen text-black bg-white flex flex-col">
+      <div className="header-space h-20" />
+      <div className="signin">
+        <div className="card">
+          <div className="provider">
+            <ZitadelForm callbackUrl={callbackUrl} />
+          </div>
+        </div>
       </div>
-    </main>
+    </div>
   );
 }

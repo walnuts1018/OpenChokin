@@ -1,13 +1,8 @@
-import NextAuth from "next-auth";
 import { JWT } from "next-auth/jwt";
 import ZitadelProvider from "next-auth/providers/zitadel";
-import { custom } from "openid-client";
+import { NextAuthOptions } from "next-auth";
 
-custom.setHttpOptionsDefaults({
-  timeout: 10000,
-});
-
-const authOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     ZitadelProvider({
       clientId: process.env.ZITADEL_CLIENT_ID as string,
@@ -50,8 +45,7 @@ const authOptions = {
       };
     },
   },
+  pages: {
+    signIn: '/signin',
+  },
 };
-
-const handler = NextAuth(authOptions);
-
-export { handler as GET, handler as POST };

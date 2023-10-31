@@ -8,7 +8,7 @@ export const LoginButton = () => {
       style={{ marginRight: 10 }}
       onClick={() => signIn()}
     >
-      ログイン
+      ログイン / 新規登録
     </button>
   );
 };

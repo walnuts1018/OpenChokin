@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./api/auth/[...nextauth]/options";
 
 export default function Home() {
   return (
