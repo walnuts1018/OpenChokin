@@ -48,8 +48,9 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version-file: ./back/go.sum
+          go-version-file: ./back/go.mod
           cache: true
+          cache-dependency-path: ./back/go.sum
 
       - name: go mod download
         run: go mod download
