@@ -16,7 +16,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version-file: ./back/go.mod
+          go-version-file: ./back/go.sum
           cache: true
 
       - name: Build
