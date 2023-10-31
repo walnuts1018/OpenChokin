@@ -12,8 +12,6 @@ FROM alpine:3
 WORKDIR /app
 
 COPY --from=builder /build/server ./
-COPY --from=builder /build/templates/ /app/templates/
-COPY --from=builder /build/assets/ /app/assets/
 COPY --from=builder /usr/share/zoneinfo/Asia/Tokyo /usr/share/zoneinfo/Asia/Tokyo
 CMD ["./server"]
 LABEL org.opencontainers.image.source = "https://github.com/walnuts1018/openchokin"
