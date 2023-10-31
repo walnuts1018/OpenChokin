@@ -3,7 +3,7 @@ ENV ROOT=/build
 RUN mkdir ${ROOT}
 WORKDIR ${ROOT}
 
-COPY ./ ./
+COPY ./Back ./
 RUN go get
 
 RUN CGO_ENABLED=0 GOOS=linux go build -o server $ROOT/main.go && chmod +x ./server
