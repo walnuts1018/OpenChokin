@@ -45,24 +45,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx
 
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: ./back/go.mod
-          cache: true
-          cache-dependency-path: ./back/go.sum
-
-      - name: go mod download
-        run: go mod download
-        working-directory: ./back
-
-      - name: go build
-        working-directory: ./back
-        env:
-          CGO_ENABLED: 0
-          GOOS: linux
-        run: go build -o server main.go
-
       - name: Build and push Docker images
         uses: docker/build-push-action@v4.0.0
         if: github.event_name != 'release'
