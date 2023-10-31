@@ -67,7 +67,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/walnuts1018/openchokin/front:latest
-            ghcr.io/walnuts1018/openchokin/front:${{ github.sha }}-${{ github.run_number }}
+            ghcr.io/walnuts1018/openchokin/front:v0.0.0-${{ github.sha }}-${{ github.run_number }}
 
   SucceessNotification:
     if: ${{ success() }}
