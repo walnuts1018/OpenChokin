@@ -1,4 +1,5 @@
 import NextAuth from "next-auth";
+import { JWT } from "next-auth/jwt";
 import ZitadelProvider from "next-auth/providers/zitadel";
 import { custom } from 'openid-client';
 
@@ -23,7 +24,7 @@ const authOptions = {
     }),
   ],
   callbacks: {
-    jwt: async ({ token, user, account, profile, isNewUser }) => {
+    jwt: async ({ token, user, account, profile, isNewUser }: { token: JWT, user?: any, account?: any, profile?: any, isNewUser?: boolean }) => {
       if (user) {
         token.user = user;
         const u = user as any
@@ -34,16 +35,16 @@ const authOptions = {
       }
       return token;
     },
-  },
-  session: ({ session, token }) => {
-    token.accessToken
-    return {
-      ...session,
-      user: {
-        ...session.user,
-        role: token.role,
-      },
-    };
+    session: ({ session, token }: { token: JWT, session?: any }) => {
+      token.accessToken
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          role: token.role,
+        },
+      };
+    },
   },
 };
 
