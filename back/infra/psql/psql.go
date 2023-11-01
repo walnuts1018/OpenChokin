@@ -1,3 +1,9 @@
+/*
+THIS IS NOT UP TO DATE
+TODO: change
+see @/back/readme.md
+*/
+
 package psql
 
 import (
