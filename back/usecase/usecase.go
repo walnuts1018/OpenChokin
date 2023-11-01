@@ -36,7 +36,7 @@ func (u Usecase) GetUser(userID string) (domain.User, error) {
 
 func (u Usecase) NewMoneyPool(moneyPoolName, moneyPoolColor, userID string, isWorldPublic bool) (domain.MoneyPool, error) {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	moneyPoolID := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%d%d%d", moneyPoolName, userID, r.Int63())))
+	moneyPoolID := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v%v%v", moneyPoolName, userID, r.Int63())))
 	moneyPool := domain.MoneyPool{
 		ID:            moneyPoolID,
 		Name:          moneyPoolName,
