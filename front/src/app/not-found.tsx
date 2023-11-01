@@ -15,14 +15,14 @@ export default function NotFoundPage() {
           <div className="mt-0 space-x-8 w-full flex items-center justify-center h-fit">
             <Link
               href="/"
-              className=" text-xl items-center bg-[#f9842c] hover:bg-[#FA6C28] rounded-full font-bold text-white px-8 py-1 min-w-fit w-2/12 border-2 border-[#f9842c] hover:border-[#FA6C28]"
+              className=" text-xl items-center bg-primary-default hover:bg-primary-dark rounded-full font-bold text-white px-8 py-1 min-w-fit w-2/12 border-2 border-primary-default hover:border-primary-dark"
             >
               トップ
             </Link>
             <button
               type="button"
               onClick={() => router.back()}
-              className=" text-xl items-center bg-white hover:bg-gray-100 rounded-full font-bold text-[#f9842c] px-8 py-1 w-2/12 border-2 border-[#f9842c] min-w-fit"
+              className=" text-xl items-center bg-white hover:bg-gray-100 rounded-full font-bold text-primary-default px-8 py-1 w-2/12 border-2 border-primary-default min-w-fit"
             >
               前の画面
             </button>

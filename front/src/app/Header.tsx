@@ -33,10 +33,14 @@ export async function Header() {
           </div>
         </div>
         <div className="flex justify-center w-full border-0 bg-white">
-          <div className="w-11/12 h-[3px] bg-gray-300 px-20 rounded-full"></div>
+          <div className="w-11/12 h-[1px] bg-gray-300 px-20"></div>
+        </div>
+        <div className="flex justify-center w-full border-0 bg-transparent">
+          <div className="w-11/12 h-[1px] bg-gray-300 px-20"></div>
         </div>
         {/*<div className="flex justify-center w-full border-0 bg-gradient-to-b from-white to-transparent h-1"></div>*/}
       </header>
+      <div className="header-space h-20" />
     </>
   );
 }
