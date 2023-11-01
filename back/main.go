@@ -1,17 +1,37 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
+	"log/slog"
+	"os"
 
-	"github.com/gin-gonic/gin"
+	"github.com/walnuts1018/openchokin/back/config"
+	"github.com/walnuts1018/openchokin/back/handler"
+	"github.com/walnuts1018/openchokin/back/infra/psql"
+	"github.com/walnuts1018/openchokin/back/usecase"
 )
 
 func main() {
-	engine := gin.Default()
-	engine.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "hello world2",
-		})
-	})
-	engine.Run(":8080")
+	config.LoadConfig()
+
+	db, err := psql.NewDB()
+	if err != nil {
+		slog.Error("failed to create db", "message", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	u := usecase.NewUsecase(db)
+
+	h, err := handler.NewHandler(u)
+	if err != nil {
+		slog.Error("failed to create handler", "message", err)
+		os.Exit(1)
+	}
+
+	err = h.Run(fmt.Sprintf(":%v", config.Config.ServerPort))
+	if err != nil {
+		slog.Error("failed to run handler", "message", err)
+		os.Exit(1)
+	}
 }

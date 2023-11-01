@@ -35,7 +35,6 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     session: ({ session, token }: { token: JWT; session?: any }) => {
-      token.accessToken;
       return {
         ...session,
         user: {
