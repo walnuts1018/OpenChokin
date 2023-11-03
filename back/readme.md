@@ -2,7 +2,6 @@
 erDiagram
   users ||--o{ money_pools : ""
   money_pools ||--o{ money_transactions : ""
-  money_transactions ||--o{ stores : ""
   money_transactions ||--o{ items : ""
   money_transactions ||--o{labels: ""
   users ||--o{ money_provider : ""
