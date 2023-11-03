@@ -34,7 +34,7 @@ func dbInit() error {
 
     // If the database does not exist, create it
     if dbName == "" {
-        _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %v", config.Config.PostgresDb))
+        _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %v OWNER %v", config.Config.PostgresDb, config.Config.PostgresUser))
 		if err != nil {
 			return fmt.Errorf("failed to create db: %w", err)
 		}
@@ -49,7 +49,7 @@ func NewDB() (*DB, error) {
 		return nil, fmt.Errorf("failed to init db: %w", err)
 	}
 
-    db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresAdminUser, config.Config.PostgresAdminPassword, sslmode))
+    db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresUser, config.Config.PostgresPassword, sslmode))
     if err != nil {
         return nil, fmt.Errorf("failed to open db: %w", err)
     }
