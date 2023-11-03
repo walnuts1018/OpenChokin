@@ -87,11 +87,11 @@ export function Balance({
         >
           <SwiperSlide className="">
             <ThemeProvider theme={theme1}>
-              <div className="border-2 border-transparent h-full mx-2 overflow-scroll overflow-x-hidden">
-                {moneypools.map((moneyPool) => (
+              <div className="border-2 border-transparent h-full mx-2 overflow-auto overflow-x-hidden">
+                {moneypools.map((moneyPool, index) => (
                   <div
                     key={moneyPool.id}
-                    className="flex gap-4 font-Noto font-normal my-4 text-4xl items-center justify-between px-4 overflow-hidden"
+                    className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-4 overflow-hidden border-b-2 border-gray-300"
                   >
                     <div className="w-10">{moneyPool.emoji}</div>
                     <div className="flex items-center justify-between w-9/12">
