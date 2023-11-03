@@ -49,7 +49,7 @@ func NewDB() (*DB, error) {
 		return nil, fmt.Errorf("failed to init db: %w", err)
 	}
 
-    db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresUser, config.Config.PostgresPassword, sslmode))
+    db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresUser, config.Config.PostgresPassword, sslmode))
     if err != nil {
         return nil, fmt.Errorf("failed to open db: %w", err)
     }
