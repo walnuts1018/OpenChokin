@@ -13,6 +13,7 @@
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.14.16",
     "@mui/styled-engine-sc": "^6.0.0-alpha.4",
+    "@types/react-modal": "^3.16.2",
     "next": "14.0.1",
     "next-auth": "^4.24.4",
     "react": "^18",
