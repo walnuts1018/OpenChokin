@@ -7,7 +7,11 @@ see @/back/readme.md
 package psql
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
+	"database/sql"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -22,18 +26,28 @@ const (
 type DB struct {
 	db *sqlx.DB
 }
-
 func dbInit() error {
-	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresAdminUser, config.Config.PostgresAdminPassword, sslmode))
-	if err != nil {
-		return fmt.Errorf("failed to open db: %w", err)
-	}
-	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %v", config.Config.PostgresDb))
-	if err != nil {
-		return fmt.Errorf("failed to create db: %w", err)
-	}
+    db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresAdminUser, config.Config.PostgresAdminPassword, sslmode))
+    if err != nil {
+        return fmt.Errorf("failed to open db: %w", err)
+    }
+	defer db.Close()
 
-	return nil
+    var dbName string
+    err = db.Get(&dbName, "SELECT datname FROM pg_database WHERE datname = $1", config.Config.PostgresDb)
+    if err != nil && err != sql.ErrNoRows {
+        return fmt.Errorf("error checking for database existence: %w", err)
+    }
+
+    // If the database does not exist, create it
+    if dbName == "" {
+        _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %v", config.Config.PostgresDb))
+		if err != nil {
+			return fmt.Errorf("failed to create db: %w", err)
+		}
+    }
+
+    return nil
 }
 
 func NewDB() (*DB, error) {
@@ -42,39 +56,68 @@ func NewDB() (*DB, error) {
 		return nil, fmt.Errorf("failed to init db: %w", err)
 	}
 
-	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresUser, config.Config.PostgresPassword, config.Config.PostgresDb, sslmode))
-	if err != nil {
-		return nil, fmt.Errorf("failed to open db: %w", err)
-	}
+    db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresAdminUser, config.Config.PostgresAdminPassword, sslmode))
+    if err != nil {
+        return nil, fmt.Errorf("failed to open db: %w", err)
+    }
 
-	//Create Table
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS users (id text PRIMARY KEY, money_pool_ids text[])")
+	// SQLファイルからテーブルを作成
+	err = executeSQLFile(db, "/app/infra/psql/init.sql")
 	if err != nil {
-		return nil, fmt.Errorf("failed to create users table: %w", err)
-	}
-
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS money_pools (id text PRIMARY KEY, name text, color varchar(6), is_world_public boolean, share_user_ids text[])")
-	if err != nil {
-		return nil, fmt.Errorf("failed to create money_pools table: %w", err)
-	}
-
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS transactions (id text PRIMARY KEY, money_pool_id text, transaction_date date, title text, amount float8, labels text[], is_world_public boolean, share_user_ids text[], expectation boolean, store_id text, item_ids text[], description text) PARTITION BY RANGE (transaction_date_id)")
-	if err != nil {
-		return nil, fmt.Errorf("failed to create transactions table: %w", err)
-	}
-
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS items (id text PRIMARY KEY, name text, price_per_unit float8, user_id text")
-	if err != nil {
-		return nil, fmt.Errorf("failed to create items table: %w", err)
-	}
-
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS stores (id text PRIMARY KEY, name text, user_id text)")
-	if err != nil {
-		return nil, fmt.Errorf("failed to create stores table: %w", err)
+		return nil, err
 	}
 
 	return &DB{db: db}, nil
 }
+func executeSQLFile(db *sqlx.DB, filepath string) error {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return fmt.Errorf("failed to open SQL file: %w", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var sqlStatement string
+	var inDOBlock bool
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmedLine := strings.TrimSpace(line)
+
+		// コメントを無視
+		if strings.HasPrefix(trimmedLine, "--") {
+			continue
+		}
+
+		// DOブロックの開始を検出
+		if strings.HasPrefix(trimmedLine, "DO") {
+			inDOBlock = true
+		}
+
+		// DOブロック内では、END; まで読み込む
+		if inDOBlock && strings.HasPrefix(trimmedLine, "END;") {
+			inDOBlock = false
+		}
+
+		sqlStatement += line + "\n" // SQLステートメントを行ごとに追加
+
+		// SQLステートメントが終わったかどうか（セミコロンかDOブロックの終わり）
+		if (!inDOBlock && strings.HasSuffix(trimmedLine, ";")) || (!inDOBlock && strings.HasPrefix(trimmedLine, "END;")) {
+			_, err = db.Exec(sqlStatement)
+			if err != nil {
+				return fmt.Errorf("failed to exec SQL statement: %w", err)
+			}
+			sqlStatement = "" // ステートメントをリセット
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("error while reading SQL file: %w", err)
+	}
+
+	return nil
+}
+
 
 func (db *DB) Close() error {
 	return db.db.Close()
