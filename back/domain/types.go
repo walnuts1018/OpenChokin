@@ -23,7 +23,7 @@ type User struct {
 }
 
 type Store struct {
-	ID     string `db:"id"`
+	ID     int64  `db:"id"`
 	Name   string `db:"name"`
 	UserID string `db:"user_id"`
 }

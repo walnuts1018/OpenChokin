@@ -37,18 +37,6 @@ erDiagram
     BIGSERIAL store_id "取引が発生した店舗のID"
   }
 
-  labels {
-    BIGSERIAL id "LabelID"
-    text name "ラベルの名前"
-    BIGSERIAL user_id "ラベルを登録したユーザーのID"
-  }
-
-  money_transaction_labels {
-    BIGSERIAL id "TransactionLabelID"
-    BIGSERIAL money_transaction_id "ラベルが付けられている取引のID"
-    BIGSERIAL label_id "付けられているラベルのID"
-  }
-
   stores {
     BIGSERIAL id "StoreID"
     text name "店舗の名前"
