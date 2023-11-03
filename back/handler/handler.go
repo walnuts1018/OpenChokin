@@ -18,6 +18,19 @@ func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 	v1 := r.Group("/v1")
 	{
 		v1.GET("/slack/profile", func(ctx *gin.Context) { fmt.Printf("%v", uc) })
+		// クエリパラメータtype=summary or detailでサマリーと詳細を分けられる
+		v1.GET("/moneypools")
+		v1.GET("/moneypools/:moneypool_id")
+		v1.GET("/moneyproviders")
+		v1.GET("/moneyinformation")
+		v1.POST("/moneypools/:moneypool_id/payments")
+		// クエリパラメータで日付を指定する
+		v1.GET("/payments")
+		// 今回は実装しない
+		// v1.POST("/stores", createStore)
+		// v1.PATCH("/stores/:store_id", updateStore)
+		// v1.POST("/items", createItem)
+		// v1.PATCH("/items/:item_id", updateItem)
 	}
 	return r, nil
 }
