@@ -46,3 +46,10 @@ type Item struct {
 type GetTransactionHints struct {
 	PartitioningKeys []string // YYYY-MM
 }
+
+type MoneyProvider struct {
+	ID      string  `db:"id"`
+	Name    string  `db:"name"`
+	UserID  string  `db:"user_id"`
+	Balance float64 `db:"balance"`
+}

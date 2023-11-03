@@ -8,7 +8,7 @@ erDiagram
   users ||--o{ money_provider : ""
 
   users {
-    BIGSERIAL id "UserID OIDCのSubjectと同じ"
+    text id "UserID OIDCのSubjectと同じ"
   }
 
   money_pools {
@@ -34,7 +34,7 @@ erDiagram
     text description "取引の説明"
     boolean is_world_public "取引が公開されているかどうか"
     boolean is_expectation "取引が予定かどうか"
-    text store_id "取引が発生した店舗のID"
+    BIGSERIAL store_id "取引が発生した店舗のID"
   }
 
   labels {
@@ -50,29 +50,29 @@ erDiagram
   }
 
   stores {
-    text id "StoreID"
+    BIGSERIAL id "StoreID"
     text name "店舗の名前"
-    text user_id "店舗を登録したユーザーのID"
+    BIGSERIAL user_id "店舗を登録したユーザーのID"
   }
 
   items {
-    text id "ItemID"
+    BIGSERIAL id "ItemID"
     text name "購入品の名前"
     float8 price_per_unit "単価"
-    text user_id "購入品を登録したユーザーのID"
+    BIGSERIAL user_id "購入品を登録したユーザーのID"
   }
 
   money_transaction_items {
     BIGSERIAL id "TransactionItemID"
     BIGSERIAL money_transaction_id "購入品が属する取引のID"
-    text item_id "購入品のID"
+    BIGSERIAL item_id "購入品のID"
     float8 amount "購入品の個数"
   }
 
   money_provider {
-    text id "MoneyProviderID"
+    BIGSERIAL id "MoneyProviderID"
     text name "MoneyProviderの名前"
-    text user_id "MoneyProviderを登録したユーザーのID"
+    BIGSERIAL user_id "MoneyProviderを登録したユーザーのID"
     float8 balance "MoneyProviderの残高"
   }
 ```
