@@ -14,6 +14,7 @@ erDiagram
     BIGSERIAL id "MoneyPoolID"
     text name "MoneyPoolの名前"
     text description "MoneyPoolの説明"
+    varchar(6) color "MoneyPoolの色"
     boolean is_world_public "MoneyPoolが公開されているかどうか"
     BIGSERIAL owner_id "MoneyPoolのオーナーのID"
   }

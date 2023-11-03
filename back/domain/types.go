@@ -2,54 +2,47 @@ package domain
 
 import "time"
 
-type Transaction struct {
-	ID              string    `db:"id"`
-	MoneyPoolID     string    `db:"money_pool_id"`
+type MoneyTransaction struct {
+	ID              int64     `db:"id"`
+	MoneyPoolID     int64     `db:"money_pool_id"`
 	TransactionDate time.Time `db:"transaction_date"`
 	Title           string    `db:"title"`
 	Amount          float64   `db:"amount"` //金額
-	Labels          []string  `db:"labels"`
-	IsWorldPublic   bool      `db:"is_world_public"`
-	ShareUserIDs    []string  `db:"share_user_ids"`
-	Expectation     bool      `db:"expectation"`
-	StoreID         string    `db:"store_id"`
-	ItemIDs         []string  `db:"item_ids"`
 	Description     string    `db:"description"`
+	IsWorldPublic   bool      `db:"is_world_public"`
+	IsExpectation   bool      `db:"is_expectation"`
+	StoreID         int64     `db:"store_id"`
 }
 
 type User struct {
-	ID           string   `db:"id"`
-	MoneyPoolIDs []string `db:"money_pool_ids"`
+	ID string `db:"id"`
 }
 
 type Store struct {
 	ID     int64  `db:"id"`
 	Name   string `db:"name"`
-	UserID string `db:"user_id"`
+	UserID int64  `db:"user_id"`
 }
 
 type MoneyPool struct {
-	ID            string   `db:"id"`
-	Name          string   `db:"name"`
-	Color         string   `db:"color"`
-	IsWorldPublic bool     `db:"is_world_public"`
-	ShareUserIDs  []string `db:"share_user_ids"`
+	ID            int64  `db:"id"`
+	Name          string `db:"name"`
+	Description   string `db:"description"`
+	Color         string `db:"color"`
+	IsWorldPublic bool   `db:"is_world_public"`
+	OwnerID       int64  `db:"owner_id"`
 }
 
 type Item struct {
-	ID           string  `db:"id"`
+	ID           int64   `db:"id"`
 	Name         string  `db:"name"`
 	PricePerUnit float64 `db:"price_per_unit"`
-	UserID       string  `db:"user_id"`
-}
-
-type GetTransactionHints struct {
-	PartitioningKeys []string // YYYY-MM
+	UserID       int64   `db:"user_id"`
 }
 
 type MoneyProvider struct {
-	ID      string  `db:"id"`
+	ID      int64   `db:"id"`
 	Name    string  `db:"name"`
-	UserID  string  `db:"user_id"`
+	UserID  int64   `db:"user_id"`
 	Balance float64 `db:"balance"`
 }
