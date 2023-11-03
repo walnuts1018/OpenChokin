@@ -1,7 +1,6 @@
-import type { NextApiRequest } from "next";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
-export async function POST(request: NextApiRequest) {
+export async function POST(request: NextRequest) {
   const result = await fetch("https://httptest.walnuts.dev", {
     method: "POST",
     headers: {
