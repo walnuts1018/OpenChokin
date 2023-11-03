@@ -33,7 +33,7 @@ type DB interface {
 	GetMoneyTransactionsByMoneyPoolID(moneyPoolID string) ([]MoneyTransaction, error)
 	UpdateMoneyTransaction(moneyTransaction MoneyTransaction) error
 
-	GetMoneyPoolBalance(moneyPoolID string) (float64, error)                       // transactionからマネープールの残高を計算する
-	GetMoneyPoolBalanceOfDate(moneyPoolID string, date time.Time) (float64, error) // transactionからマネープールの残高を計算する（ある日までの）
+	GetMoneyPoolBalance(moneyPoolID string, includeExpceted bool) (float64, error)                       // transactionからマネープールの残高を計算する
+	GetMoneyPoolBalanceOfDate(moneyPoolID string, date time.Time, includeExpceted bool) (float64, error) // transactionからマネープールの残高を計算する（ある日までの）
 
 }
