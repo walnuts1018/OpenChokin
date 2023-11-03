@@ -6,7 +6,6 @@ import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
 import Modal from "react-modal";
 
 const tabColors = ["#f5c33f", "#31aedd"];
-
 const theme1 = createTheme({
   palette: {
     primary: {

@@ -8,6 +8,7 @@ import { Plus } from "react-feather";
 import { Balance } from "./Balance";
 import { MoneyPool } from "./type";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import Image from "next/image";
 
 export default function Mypage() {
   return (
@@ -106,7 +107,7 @@ function MypageContents() {
       <ThemeProvider theme={theme}>
         <div className="flex p-5 h-[calc(100vh-5rem)]">
           <div className="col-span-1 w-4/12 px-2">
-            <div className="h-1/6 flex justify-center items-center pb-4">
+            <div className="h-1/6 flex justify-center items-center pb-4 gap-2">
               <div className="flex gap-6 h-7/12 w-3/4 p-2 font-medium text-5xl font-Noto justify-between items-center border-b-4 border-cyan-600">
                 <div className="font-light text-3xl t-0 l-0">総残高</div>
                 <div className="flex gap-4 w-fit r-0">
@@ -115,10 +116,35 @@ function MypageContents() {
                       .reduce(function (sum, moneypool) {
                         return sum + moneypool.amount;
                       }, 0)
-                      .toLocaleString()}
+                      .toLocaleString(undefined, {
+                        maximumFractionDigits: 5,
+                      })}
                   </p>
                   <p>円</p>
                 </div>
+              </div>
+              <div className="h-4/12 flex items-center justify-center pt-4 pl-3 b-0">
+                <a
+                  href={`https://twitter.com/intent/tweet?text=%E7%A7%81%E3%81%AE%E6%AE%8B%E9%AB%98%E3%81%AF${moneyPools
+                    .reduce(function (sum, moneypool) {
+                      return sum + moneypool.amount;
+                    }, 0)
+                    .toLocaleString(undefined, {
+                      maximumFractionDigits: 5,
+                    })}%E5%86%86%E3%81%A7%E3%81%99%EF%BC%81%0D%0AOpenChokin%E3%81%A7%E5%AE%B6%E8%A8%88%E7%B0%BF%E3%82%92%E5%85%A8%E4%B8%96%E7%95%8C%E3%81%AB%E5%85%AC%E9%96%8B%EF%BC%81&url=https://openchokin.walnuts.dev&hashtags=OpenChokina&via=walnuts1018`}
+                  rel="nofollow"
+                  target="_blank"
+                  className="h-full font-Nunito text-xl"
+                >
+                  <Image
+                    src="/icons/twitter-x-line.svg"
+                    alt="x"
+                    width={30}
+                    height={30}
+                    style={{ objectFit: "contain" }}
+                    className="min-w-[30px] max-w-[30px]"
+                  />
+                </a>
               </div>
             </div>
             <div className="h-5/6">
