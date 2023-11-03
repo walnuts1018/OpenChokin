@@ -18,3 +18,14 @@ body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-rgb));
 }
+
+.swiper-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  /*height: calc(100% - 3rem);*/
+  flex-direction: row-reverse;
+}
+
+.MuiTableContainer-root {
+  height: 100%;
+}

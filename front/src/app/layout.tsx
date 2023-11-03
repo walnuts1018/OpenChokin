@@ -7,6 +7,7 @@ import Favicon32 from "../../public/favicons/favicon-32x32.png";
 import Favicon from "../../public/favicons/favicon.ico";
 import { Header } from "./Header";
 import { SessionProvider } from "next-auth/react";
+import { StyledEngineProvider } from "@mui/material/styles";
 
 const title = "OpenChokin";
 const description = "OpenChokinは家計簿を公開できるサービスです。";
@@ -67,8 +68,10 @@ export default function RootLayout({
         <meta name="theme-color" content="#ffffff" />
       </head>
       <body className={`${NunitoFont.variable} ${NotoFont.variable}`}>
-        <Header />
-        {children}
+        <StyledEngineProvider injectFirst>
+          <Header />
+          {children}
+        </StyledEngineProvider>
       </body>
     </html>
   );

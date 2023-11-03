@@ -17,9 +17,12 @@
     "next-auth": "^4.24.4",
     "react": "^18",
     "react-dom": "^18",
+    "react-feather": "^2.0.10",
     "react-hook-form": "^7.47.0",
+    "react-modal": "^3.16.1",
     "sharp": "^0.32.6",
-    "styled-components": "^6.1.0"
+    "styled-components": "^6.1.0",
+    "swiper": "^11.0.3"
   },
   "devDependencies": {
     "@types/node": "^20",
