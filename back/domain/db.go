@@ -11,4 +11,7 @@ type DB interface {
 	UpdateMoneyPool(moneyPool MoneyPool) error
 
 	NewMoneyProvider(moneyProvider MoneyProvider) error
+	GetMoneyProvider(id string) (MoneyProvider, error)
+	GetMoneyProvidersByUserID(userID string) ([]MoneyProvider, error)
+	UpdateMoneyProvider(moneyProvider MoneyProvider) error
 }
