@@ -4,7 +4,8 @@ import { useState } from "react";
 import Checkbox from "@mui/material/Checkbox";
 import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
 import Modal from "react-modal";
-
+import { Plus } from "react-feather";
+import { useRef } from "react";
 const tabColors = ["#f5c33f", "#31aedd"];
 const theme1 = createTheme({
   palette: {
@@ -48,6 +49,10 @@ export function Balance({
   const [swiperIndex, setSwiperIndex] = useState(0);
   const [changePublicCheckIsOpen, setChangePublicCheckIsOpen] = useState(false);
   const [forceReload, setForceReload] = useState(0);
+  const [isAddMode, setIsAddMode] = useState(false);
+  const inputEl = useRef<HTMLInputElement>(null!);
+
+  async function addMoneyPool() {}
 
   Modal.setAppElement("body");
   return (
@@ -118,6 +123,91 @@ export function Balance({
                     </div>
                   </div>
                 ))}
+                <div className="flex justify-center items-center h-16 w-full">
+                  <div
+                    className="w-[95%] h-12 cursor-pointer"
+                    onClick={() => {
+                      setIsAddMode(true);
+                    }}
+                    onBlur={(fe) => {
+                      if (!fe.currentTarget.contains(fe.relatedTarget)) {
+                        setIsAddMode(false);
+                      }
+                    }}
+                    tabIndex={0}
+                  >
+                    {isAddMode ? (
+                      <div
+                        className={`flex h-12 items-center gap-2 w-full border-2 border-gray-200 hover:border-primary-default rounded-full shadow-md px-2 font-Noto`}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.borderColor = "transparent";
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.borderColor = tabColors[0];
+                        }}
+                      >
+                        <button
+                          className="h-5/6"
+                          style={{ color: tabColors[0] }}
+                          tabIndex={0}
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            await addMoneyPool();
+                          }}
+                        >
+                          <Plus className="h-full w-full" />
+                        </button>
+                        <div className="w-11/12 flex gap-2 justify-start items-center p-1">
+                          <input
+                            type="text"
+                            ref={inputEl}
+                            className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                              }
+                            }}
+                            placeholder="絵文字"
+                          />
+                          <input
+                            type="text"
+                            className="h-[80%] hover:border-0 focus:outline-none w-[75%]"
+                            onKeyDown={async (e) => {
+                              if (e.key === "Enter") {
+                                if (e.currentTarget) {
+                                  e.currentTarget.blur();
+                                }
+                                e.preventDefault();
+                                await addMoneyPool();
+                              }
+                            }}
+                            placeholder="名前"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="flex h-12 items-center gap-2 w-full border-2 border-transparent hover:bg-gray-50 hover:border-primary-default rounded-full hover:shadow-md px-2 font-Noto"
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.borderColor = "transparent";
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.borderColor = tabColors[0];
+                        }}
+                      >
+                        <div className="h-5/6  border-primary-default aspect-square">
+                          <div
+                            className="h-full w-full"
+                            style={{ color: tabColors[0] }}
+                          >
+                            <Plus className="h-full w-full" />
+                          </div>
+                        </div>
+                        追加
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               <Modal
                 isOpen={changePublicCheckIsOpen}
