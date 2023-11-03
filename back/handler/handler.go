@@ -18,7 +18,7 @@ func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 	r := gin.Default()
 	v1 := r.Group("/v1")
 	{
-		// クエリパラメータtype=summary or detailでサマリーと詳細を分けられる
+		// クエリパラメータtype=summary or detailでサマリーと詳細を分けられる。
 		// 今回はsummaryだけを実装する
 		// /moneypools?type=summary
 		v1.GET("/moneypools", moneyPoolsHandler)
