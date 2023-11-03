@@ -1,47 +1,52 @@
 ```mermaid
 erDiagram
-  users ||--o{ money_pools : "1人のユーザーは0以上のマネープールを持つ"
-  money_pools ||--o{ transactions : "1つのマネープールは0以上の取引を持つ"
-  transactions ||--o{ transactions_2023-01 : "取引は月ごとにパーティショニングされる"
-  transactions ||--o{ transactions_2023-02 : ""
-  transactions ||--o{ transactions_2023-03 : ""
-  transactions ||--o{ stores : "取引は0以上の店舗に属する"
-  transactions ||--o{ items : "取引は0以上の購入品に属する"
-  users ||--o{ money_provider : "取引は0以上のMoneyProviderに属する"
+  users ||--o{ money_pools : ""
+  money_pools ||--o{ money_transactions : ""
+  money_transactions ||--o{ stores : ""
+  money_transactions ||--o{ items : ""
+  money_transactions ||--o{labels: ""
+  users ||--o{ money_provider : ""
 
   users {
-    text id "UserID OIDCのSubjectと同じ"
+    BIGSERIAL id "UserID OIDCのSubjectと同じ"
   }
 
   money_pools {
-    text id "MoneyPoolID"
+    BIGSERIAL id "MoneyPoolID"
     text name "MoneyPoolの名前"
     text description "MoneyPoolの説明"
     boolean is_world_public "MoneyPoolが公開されているかどうか"
-    text[] share_user_ids "MoneyPoolを共有しているユーザーのID"
+    BIGSERIAL owner_id "MoneyPoolのオーナーのID"
   }
 
-  transactions {
-    text id "TransactionID"
-    text money_pool_id "取引が属するMoneyPoolのID"
-    date transaction_date "取引が発生した日付"
+  share_users {
+    BIGSERIAL id "ShareUserID"
+    BIGSERIAL money_pool_id "共有されているMoneyPoolのID"
+    BIGSERIAL user_id "共有されているユーザーのID"
+  }
+
+  money_transactions {
+    BIGSERIAL id "TransactionID"
+    BIGSERIAL money_pool_id "取引が属するMoneyPoolのID"
+    date money_transaction_date "取引が発生した日付"
     title title "取引のタイトル"
     float8 amount "取引の金額"
     text description "取引の説明"
-    text[] labels "取引に付けられたラベル"
     boolean is_world_public "取引が公開されているかどうか"
     boolean is_expectation "取引が予定かどうか"
     text store_id "取引が発生した店舗のID"
-    text[] item_ids "取引に含まれる購入品のID"
   }
 
-  transactions_2023-01 {
+  labels {
+    BIGSERIAL id "LabelID"
+    text name "ラベルの名前"
+    BIGSERIAL user_id "ラベルを登録したユーザーのID"
   }
 
-  transactions_2023-02 {
-  }
-
-  transactions_2023-03 {
+  money_transaction_labels {
+    BIGSERIAL id "TransactionLabelID"
+    BIGSERIAL money_transaction_id "ラベルが付けられている取引のID"
+    BIGSERIAL label_id "付けられているラベルのID"
   }
 
   stores {
@@ -55,6 +60,13 @@ erDiagram
     text name "購入品の名前"
     float8 price_per_unit "単価"
     text user_id "購入品を登録したユーザーのID"
+  }
+
+  money_transaction_items {
+    BIGSERIAL id "TransactionItemID"
+    BIGSERIAL money_transaction_id "購入品が属する取引のID"
+    text item_id "購入品のID"
+    float8 amount "購入品の個数"
   }
 
   money_provider {
