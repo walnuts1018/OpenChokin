@@ -23,7 +23,7 @@ body {
   display: flex;
   justify-content: flex-start;
   /*height: calc(100% - 3rem);*/
-  flex-direction: row-reverse;
+  left: 0;
 }
 
 .MuiTableContainer-root {

@@ -69,8 +69,10 @@ export default function RootLayout({
       </head>
       <body className={`${NunitoFont.variable} ${NotoFont.variable}`}>
         <StyledEngineProvider injectFirst>
-          <Header />
-          {children}
+          <div>
+            <Header />
+            {children}
+          </div>
         </StyledEngineProvider>
       </body>
     </html>
