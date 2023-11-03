@@ -1,10 +1,7 @@
 package usecase
 
 import (
-	"encoding/base64"
 	"fmt"
-	"math/rand"
-	"time"
 
 	"github.com/walnuts1018/openchokin/back/domain"
 )
@@ -19,42 +16,26 @@ func NewUsecase(db domain.DB) *Usecase {
 	}
 }
 
-func (u Usecase) NewUser(userid string) (domain.User, error) {
-	user := domain.User{
-		ID: userid,
-	}
-	err := u.db.NewUser(user)
+func (u Usecase) NewUser() (domain.User, error) {
+	user, err := u.db.NewUser()
 	if err != nil {
 		return domain.User{}, fmt.Errorf("failed to create user: %w", err)
 	}
 	return user, nil
 }
 
-func (u Usecase) NewMoneyPool(moneyPoolName, moneyPoolColor, userID string, isWorldPublic bool) (domain.MoneyPool, error) {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	moneyPoolID := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%v%v%v", moneyPoolName, userID, r.Int63())))
-	moneyPool := domain.MoneyPool{
-		ID:            moneyPoolID,
-		Name:          moneyPoolName,
-		Color:         moneyPoolColor,
-		IsWorldPublic: isWorldPublic,
-		ShareUserIDs:  []string{userID},
-	}
-
-	err := u.db.NewMoneyPool(moneyPool)
+func (u Usecase) GetUser(id string) (domain.User, error) {
+	user, err := u.db.GetUser(id)
 	if err != nil {
-		return domain.MoneyPool{}, fmt.Errorf("failed to create money pool: %w", err)
+		return domain.User{}, fmt.Errorf("failed to get user: %w", err)
 	}
+	return user, nil
+}
 
-	user, err := u.db.GetUser(userID)
+func (u Usecase) UpdateUser(user domain.User) error {
+	err := u.db.UpdateUser(user)
 	if err != nil {
-		return domain.MoneyPool{}, fmt.Errorf("failed to get user: %w", err)
+		return fmt.Errorf("failed to update user: %w", err)
 	}
-
-	user.MoneyPoolIDs = append(user.MoneyPoolIDs, moneyPool.ID)
-	err = u.db.UpdateUser(user)
-	if err != nil {
-		return domain.MoneyPool{}, fmt.Errorf("failed to update user: %w", err)
-	}
-	return moneyPool, nil
+	return nil
 }

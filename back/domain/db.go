@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type DB interface {
-	NewUser(user User) error
+	NewUser() (User, error)
 	GetUser(id string) (User, error)
 	UpdateUser(user User) error
 
