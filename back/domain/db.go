@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type DB interface {
 	NewUser(user User) error
 	GetUser(id string) (User, error)
@@ -25,4 +27,13 @@ type DB interface {
 	GetItem(id string) (Item, error)
 	GetItemsByUserID(userID string) ([]Item, error)
 	UpdateItem(item Item) error
+
+	NewMoneyTransaction(moneyTransaction MoneyTransaction) error
+	GetMoneyTransaction(id string) (MoneyTransaction, error)
+	GetMoneyTransactionsByMoneyPoolID(moneyPoolID string) ([]MoneyTransaction, error)
+	UpdateMoneyTransaction(moneyTransaction MoneyTransaction) error
+
+	GetMoneyPoolBalance(moneyPoolID string) (float64, error)                       // transactionからマネープールの残高を計算する
+	GetMoneyPoolBalanceOfDate(moneyPoolID string, date time.Time) (float64, error) // transactionからマネープールの残高を計算する（ある日までの）
+
 }
