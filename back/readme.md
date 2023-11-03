@@ -32,7 +32,6 @@ erDiagram
     title title "取引のタイトル"
     float8 amount "取引の金額"
     text description "取引の説明"
-    boolean is_world_public "取引が公開されているかどうか"
     boolean is_expectation "取引が予定かどうか"
     BIGSERIAL store_id "取引が発生した店舗のID"
   }
