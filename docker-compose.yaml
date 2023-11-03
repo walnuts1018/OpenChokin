@@ -17,7 +17,7 @@ services:
       POSTGRES_ADMIN_PASSWORD: passwd
       POSTGRES_USER: openchokin
       POSTGRES_PASSWORD: passwd
-      POSTGRES_DB: sample-db
+      POSTGRES_DB: chokindb
       POSTGRES_HOST: openchokin-db
       POSTGRES_PORT: 5432
     volumes:

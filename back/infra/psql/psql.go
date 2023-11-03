@@ -1,7 +1,11 @@
 package psql
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strings"
+	"database/sql"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -15,18 +19,28 @@ const (
 type DB struct {
 	db *sqlx.DB
 }
-
 func dbInit() error {
-	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresAdminUser, config.Config.PostgresAdminPassword, sslmode))
-	if err != nil {
-		return fmt.Errorf("failed to open db: %w", err)
-	}
-	_, err = db.Exec(fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %v", config.Config.PostgresDb))
-	if err != nil {
-		return fmt.Errorf("failed to create db: %w", err)
-	}
+    db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresAdminUser, config.Config.PostgresAdminPassword, sslmode))
+    if err != nil {
+        return fmt.Errorf("failed to open db: %w", err)
+    }
+	defer db.Close()
 
-	return nil
+    var dbName string
+    err = db.Get(&dbName, "SELECT datname FROM pg_database WHERE datname = $1", config.Config.PostgresDb)
+    if err != nil && err != sql.ErrNoRows {
+        return fmt.Errorf("error checking for database existence: %w", err)
+    }
+
+    // If the database does not exist, create it
+    if dbName == "" {
+        _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %v OWNER %v", config.Config.PostgresDb, config.Config.PostgresUser))
+		if err != nil {
+			return fmt.Errorf("failed to create db: %w", err)
+		}
+    }
+
+    return nil
 }
 
 func NewDB() (*DB, error) {
@@ -35,56 +49,64 @@ func NewDB() (*DB, error) {
 		return nil, fmt.Errorf("failed to init db: %w", err)
 	}
 
-	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresUser, config.Config.PostgresPassword, config.Config.PostgresDb, sslmode))
-	if err != nil {
-		return nil, fmt.Errorf("failed to open db: %w", err)
-	}
+    db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresUser, config.Config.PostgresPassword, config.Config.PostgresDb, sslmode))
+    if err != nil {
+        return nil, fmt.Errorf("failed to open db: %w", err)
+    }
 
-	createTables(db)
+	// SQLファイルからテーブルを作成
+	err = executeSQLFile(db, "/app/infra/psql/init.sql")
+	if err != nil {
+		return nil, err
+	}
 
 	return &DB{db: db}, nil
 }
 
-func createTables(db *sqlx.DB) error {
-
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS users(id text PRIMARY KEY)`)
+func executeSQLFile(db *sqlx.DB, filepath string) error {
+	file, err := os.Open(filepath)
 	if err != nil {
-		return fmt.Errorf("failed to create table users: %w", err)
+		return fmt.Errorf("failed to open SQL file: %w", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var sqlStatement string
+	var inDOBlock bool
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		trimmedLine := strings.TrimSpace(line)
+
+		// コメントを無視
+		if strings.HasPrefix(trimmedLine, "--") {
+			continue
+		}
+
+		// DOブロックの開始を検出
+		if strings.HasPrefix(trimmedLine, "DO") {
+			inDOBlock = true
+		}
+
+		// DOブロック内では、END; まで読み込む
+		if inDOBlock && strings.HasPrefix(trimmedLine, "END;") {
+			inDOBlock = false
+		}
+
+		sqlStatement += line + "\n" // SQLステートメントを行ごとに追加
+
+		// SQLステートメントが終わったかどうか（セミコロンかDOブロックの終わり）
+		if (!inDOBlock && strings.HasSuffix(trimmedLine, ";")) || (!inDOBlock && strings.HasPrefix(trimmedLine, "END;")) {
+			_, err = db.Exec(sqlStatement)
+			if err != nil {
+				return fmt.Errorf("failed to exec SQL statement: %w", err)
+			}
+			sqlStatement = "" // ステートメントをリセット
+		}
 	}
 
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS money_pools(id BIGSERIAL PRIMARY KEY, name text NOT NULL, description text, is_world_public boolean NOT NULL DEFAULT false, owner_id BIGINT NOT NULL, version BIGINT NOT NULL DEFAULT 1)`)
-	if err != nil {
-		return fmt.Errorf("failed to create table money_pools: %w", err)
-	}
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS share_users(id BIGSERIAL PRIMARY KEY, money_pool_id BIGINT NOT NULL, user_id BIGINT NOT NULL)`)
-	if err != nil {
-		return fmt.Errorf("failed to create table share_users: %w", err)
-	}
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS money_transactions(id BIGSERIAL PRIMARY KEY, money_pool_id BIGINT NOT NULL, money_transaction_date date NOT NULL, title text NOT NULL, amount float8 NOT NULL, description text, is_expectation boolean NOT NULL DEFAULT false, store_id BIGINT, version BIGINT NOT NULL DEFAULT 1)`)
-	if err != nil {
-		return fmt.Errorf("failed to create table money_transactions: %w", err)
-	}
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS stores(id BIGSERIAL PRIMARY KEY, name text NOT NULL, user_id BIGINT NOT NULL)`)
-	if err != nil {
-		return fmt.Errorf("failed to create table stores: %w", err)
-	}
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS items(id BIGSERIAL PRIMARY KEY, name text NOT NULL, price_per_unit float8 NOT NULL, user_id BIGINT NOT NULL, version BIGINT NOT NULL DEFAULT 1)`)
-	if err != nil {
-		return fmt.Errorf("failed to create table items: %w", err)
-	}
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS money_transaction_items(id BIGSERIAL PRIMARY KEY, money_transaction_id BIGINT NOT NULL, item_id BIGINT NOT NULL, amount float8 NOT NULL)`)
-	if err != nil {
-		return fmt.Errorf("failed to create table money_transaction_items: %w", err)
-	}
-
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS money_provider(id BIGSERIAL PRIMARY KEY, name text NOT NULL, user_id BIGINT NOT NULL, balance float8 NOT NULL, version BIGINT NOT NULL DEFAULT 1)`)
-	if err != nil {
-		return fmt.Errorf("failed to create table money_provider: %w", err)
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("error while reading SQL file: %w", err)
 	}
 
 	return nil
