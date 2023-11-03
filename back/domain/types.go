@@ -2,51 +2,80 @@ package domain
 
 import "time"
 
-type MoneyTransaction struct {
-	ID              int64     `db:"id"`
-	MoneyPoolID     int64     `db:"money_pool_id"`
-	TransactionDate time.Time `db:"transaction_date"`
-	Title           string    `db:"title"`
-	Amount          float64   `db:"amount"` //金額
-	Description     string    `db:"description"`
-	IsExpectation   bool      `db:"is_expectation"`
-	StoreID         int64     `db:"store_id"`
-	Version         int64     `db:"version"`
-}
+type PublicType string
+
+const (
+	PublicTypePrivate    PublicType = "private"
+	PublicTypePublic     PublicType = "public"
+	PublicTypeRestricted PublicType = "restricted"
+)
 
 type User struct {
 	ID string `db:"id"`
 }
 
-type Store struct {
-	ID      int64  `db:"id"`
-	Name    string `db:"name"`
-	UserID  int64  `db:"user_id"`
-	Version int64  `db:"version"`
+type UserGroup struct {
+	ID        string `db:"id"`
+	Name      string `db:"name"`
+	CreatorID string `db:"creator_id"`
 }
 
 type MoneyPool struct {
-	ID            int64  `db:"id"`
-	Name          string `db:"name"`
-	Description   string `db:"description"`
-	Color         string `db:"color"`
-	IsWorldPublic bool   `db:"is_world_public"`
-	OwnerID       int64  `db:"owner_id"`
-	Version       int64  `db:"version"`
-}
-
-type Item struct {
-	ID           int64   `db:"id"`
-	Name         string  `db:"name"`
-	PricePerUnit float64 `db:"price_per_unit"` // 自動計算する
-	UserID       int64   `db:"user_id"`
-	Version      int64   `db:"version"`
+	ID          string     `db:"id"`
+	Name        string     `db:"name"`
+	Description string     `db:"description"`
+	Type        PublicType `db:"type"`
+	OwnerID     string     `db:"owner_id"`
 }
 
 type MoneyProvider struct {
-	ID      int64   `db:"id"`
-	Name    string  `db:"name"`
-	UserID  int64   `db:"user_id"`
-	Balance float64 `db:"balance"`
-	Version int64   `db:"version"`
+	ID        string  `db:"id"`
+	Name      string  `db:"name"`
+	CreatorID string  `db:"creator_id"`
+	Balance   float64 `db:"balance"`
+}
+
+type Store struct {
+	ID        string `db:"id"`
+	Name      string `db:"name"`
+	CreatorID string `db:"creator_id"`
+}
+
+type Item struct {
+	ID        string `db:"id"`
+	Name      string `db:"name"`
+	CreatorID string `db:"creator_id"`
+}
+
+type Label struct {
+	ID        string `db:"id"`
+	Name      string `db:"name"`
+	CreatorID string `db:"creator_id"`
+}
+
+type Payment struct {
+	ID          string    `db:"id"`
+	MoneyPoolID string    `db:"money_pool_id"`
+	Date        time.Time `db:"date"`
+	Title       string    `db:"title"`
+	Amount      float64   `db:"amount"`
+	Description string    `db:"description"`
+	IsPlanned   bool      `db:"is_planned"`
+	StoreID     *string   `db:"store_id"`
+}
+
+type ItemPayment struct {
+	PaymentID string `db:"payment_id"`
+	ItemID    string `db:"item_id"`
+	Quantity  int64  `db:"quantity"`
+}
+
+type UserGroupMembership struct {
+	GroupID string `db:"group_id"`
+	UserID  string `db:"user_id"`
+}
+
+type RestrictedPublicationScope struct {
+	PoolID  string `db:"pool_id"`
+	GroupID string `db:"group_id"`
 }
