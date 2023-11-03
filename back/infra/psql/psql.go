@@ -2,10 +2,10 @@ package psql
 
 import (
 	"bufio"
+	"database/sql"
 	"fmt"
 	"os"
 	"strings"
-	"database/sql"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -16,43 +16,40 @@ const (
 	sslmode = "disable"
 )
 
-type DB struct {
-	db *sqlx.DB
-}
 func dbInit() error {
-    db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresAdminUser, config.Config.PostgresAdminPassword, sslmode))
-    if err != nil {
-        return fmt.Errorf("failed to open db: %w", err)
-    }
+	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresAdminUser, config.Config.PostgresAdminPassword, sslmode))
+	if err != nil {
+		return fmt.Errorf("failed to open db: %w", err)
+	}
 	defer db.Close()
 
-    var dbName string
-    err = db.Get(&dbName, "SELECT datname FROM pg_database WHERE datname = $1", config.Config.PostgresDb)
-    if err != nil && err != sql.ErrNoRows {
-        return fmt.Errorf("error checking for database existence: %w", err)
-    }
+	var dbName string
+	err = db.Get(&dbName, "SELECT datname FROM pg_database WHERE datname = $1", config.Config.PostgresDb)
+	if err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("error checking for database existence: %w", err)
+	}
 
-    // If the database does not exist, create it
-    if dbName == "" {
-        _, err = db.Exec(fmt.Sprintf("CREATE DATABASE %v OWNER %v", config.Config.PostgresDb, config.Config.PostgresUser))
+	// If the database does not exist, create it
+	if dbName == "" {
+		_, err = db.Exec(fmt.Sprintf("CREATE DATABASE %v OWNER %v", config.Config.PostgresDb, config.Config.PostgresUser))
 		if err != nil {
 			return fmt.Errorf("failed to create db: %w", err)
 		}
-    }
+	}
 
-    return nil
+	return nil
 }
 
-func NewDB() (*DB, error) {
+func NewDB() (*sqlx.DB, error) {
 	err := dbInit()
 	if err != nil {
 		return nil, fmt.Errorf("failed to init db: %w", err)
 	}
 
-    db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresUser, config.Config.PostgresPassword, config.Config.PostgresDb, sslmode))
-    if err != nil {
-        return nil, fmt.Errorf("failed to open db: %w", err)
-    }
+	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresUser, config.Config.PostgresPassword, config.Config.PostgresDb, sslmode))
+	if err != nil {
+		return nil, fmt.Errorf("failed to open db: %w", err)
+	}
 
 	// SQLファイルからテーブルを作成
 	err = executeSQLFile(db, "/app/infra/psql/init.sql")
@@ -60,7 +57,7 @@ func NewDB() (*DB, error) {
 		return nil, err
 	}
 
-	return &DB{db: db}, nil
+	return db, nil
 }
 
 func executeSQLFile(db *sqlx.DB, filepath string) error {
@@ -110,8 +107,4 @@ func executeSQLFile(db *sqlx.DB, filepath string) error {
 	}
 
 	return nil
-}
-
-func (db *DB) Close() error {
-	return db.db.Close()
 }

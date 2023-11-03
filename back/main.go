@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/walnuts1018/openchokin/back/config"
+	"github.com/walnuts1018/openchokin/back/domain"
 	"github.com/walnuts1018/openchokin/back/handler"
 	"github.com/walnuts1018/openchokin/back/infra/psql"
 	"github.com/walnuts1018/openchokin/back/usecase"
@@ -21,7 +22,7 @@ func main() {
 	}
 	defer db.Close()
 
-	u := usecase.NewUsecase(db)
+	u := usecase.NewUsecase(domain.NewDB(db))
 
 	h, err := handler.NewHandler(u)
 	if err != nil {
