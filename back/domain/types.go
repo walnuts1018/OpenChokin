@@ -9,7 +9,6 @@ type MoneyTransaction struct {
 	Title           string    `db:"title"`
 	Amount          float64   `db:"amount"` //金額
 	Description     string    `db:"description"`
-	IsWorldPublic   bool      `db:"is_world_public"`
 	IsExpectation   bool      `db:"is_expectation"`
 	StoreID         int64     `db:"store_id"`
 	Version         int64     `db:"version"`
