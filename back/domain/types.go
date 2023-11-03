@@ -39,7 +39,7 @@ type MoneyPool struct {
 type Item struct {
 	ID           int64   `db:"id"`
 	Name         string  `db:"name"`
-	PricePerUnit float64 `db:"price_per_unit"`
+	PricePerUnit float64 `db:"price_per_unit"` // 自動計算する
 	UserID       int64   `db:"user_id"`
 	Version      int64   `db:"version"`
 }

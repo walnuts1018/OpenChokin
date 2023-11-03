@@ -35,5 +35,4 @@ type DB interface {
 
 	GetMoneyPoolBalance(moneyPoolID string, includeExpceted bool) (float64, error)                       // transactionからマネープールの残高を計算する
 	GetMoneyPoolBalanceOfDate(moneyPoolID string, date time.Time, includeExpceted bool) (float64, error) // transactionからマネープールの残高を計算する（ある日までの）
-
 }
