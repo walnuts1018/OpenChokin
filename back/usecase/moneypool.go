@@ -17,6 +17,7 @@ type MoneyPoolSummary struct {
 	Type domain.PublicType
 }
 
+// MoneyPoolsSummaryResponse
 type MoneyPoolsSummaryResponse struct {
 	Pools []MoneyPoolSummary
 }
