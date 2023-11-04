@@ -1,4 +1,4 @@
-const API_URL = process.env.API_URL;
+const API_URL = "https://api-openchokin.walnuts.dev/v1";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
