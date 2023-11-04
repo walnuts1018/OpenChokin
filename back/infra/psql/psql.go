@@ -17,12 +17,31 @@ const (
 )
 
 func dbInit() error {
-	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresAdminUser, config.Config.PostgresAdminPassword, sslmode))
+	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v sslmode=%v",
+		config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresAdminUser, config.Config.PostgresAdminPassword, sslmode))
 	if err != nil {
 		return fmt.Errorf("failed to open db: %w", err)
 	}
 	defer db.Close()
 
+	// Check if the user exists
+	var roleName string
+	err = db.Get(&roleName, "SELECT rolname FROM pg_roles WHERE rolname = $1", config.Config.PostgresUser)
+	if err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("error checking for user existence: %w", err)
+	}
+
+	// If the user does not exist, create it
+	if roleName == "" {
+		// Create a new user with a password
+		_, err = db.Exec(fmt.Sprintf("CREATE USER %v WITH PASSWORD '%v'",
+			config.Config.PostgresUser, config.Config.PostgresPassword))
+		if err != nil {
+			return fmt.Errorf("failed to create user: %w", err)
+		}
+	}
+
+	// Check if the database exists
 	var dbName string
 	err = db.Get(&dbName, "SELECT datname FROM pg_database WHERE datname = $1", config.Config.PostgresDb)
 	if err != nil && err != sql.ErrNoRows {

@@ -108,3 +108,67 @@ CREATE TABLE IF NOT EXISTS restricted_publication_scope (
 ALTER TABLE restricted_publication_scope 
 ADD CONSTRAINT fk_money_pool_restricted
 CHECK ((SELECT type FROM money_pool WHERE id = pool_id) = 'restricted');
+
+-- 初期データ追加
+-- usersテーブルにデータを挿入
+INSERT INTO users (id) VALUES (DEFAULT), (DEFAULT), (DEFAULT);
+
+-- user_groupsテーブルにデータを挿入
+INSERT INTO user_groups (name, creator_id) VALUES
+('Developers Group', 1),
+('Designers Group', 1),
+('Managers Group', 2);
+
+-- money_poolテーブルにデータを挿入
+INSERT INTO money_pool (name, description, type, owner_id) VALUES
+('Fund for Emergencies', 'Emergency funds for unexpected expenses', 'private', 1),
+('Office Party Fund', 'Savings for annual office parties', 'public', 2),
+('Project X Budget', 'Budget allocated for Project X', 'restricted', 3);
+
+-- money_providerテーブルにデータを挿入
+INSERT INTO money_provider (name, creator_id, balance) VALUES
+('John’s Wallet', 1, 1000.0000),
+('Anna’s Savings', 2, 1500.0000),
+('Company Petty Cash', 3, 500.0000);
+
+-- storeテーブルにデータを挿入
+INSERT INTO store (name, creator_id) VALUES
+('Tech Gadgets', 1),
+('Office Supplies Store', 2),
+('Bookstore', 3);
+
+-- itemテーブルにデータを挿入
+INSERT INTO item (name, creator_id) VALUES
+('Laptop', 1),
+('Ergonomic Keyboard', 1),
+('Planner Notebook', 2);
+
+-- labelテーブルにデータを挿入
+INSERT INTO label (name, creator_id) VALUES
+('Electronics', 1),
+('Office Equipment', 1),
+('Stationery', 2);
+
+-- paymentテーブルにデータを挿入
+INSERT INTO payment (money_pool_id, date, title, amount, description, is_planned, store_id) VALUES
+(1, '2023-01-15', 'Emergency Repair', 200.0000, 'Repairing office printer', TRUE, NULL),
+(2, '2023-02-20', 'Office Party', 300.0000, 'Annual office party expenses', FALSE, NULL),
+(3, '2023-03-12', 'Project X Software', 400.0000, 'Software purchase for Project X', TRUE, 1);
+
+-- item_paymentテーブルにデータを挿入
+INSERT INTO item_payment (payment_id, item_id, quantity) VALUES
+(1, 1, 1),
+(2, 2, 2),
+(3, 3, 3);
+
+-- user_group_membershipテーブルにデータを挿入
+INSERT INTO user_group_membership (group_id, user_id) VALUES
+(1, 1),
+(1, 2),
+(2, 3);
+
+-- restricted_publication_scopeテーブルにデータを挿入
+INSERT INTO restricted_publication_scope (pool_id, group_id) VALUES
+(3, 1),
+(3, 2),
+(3, 3);

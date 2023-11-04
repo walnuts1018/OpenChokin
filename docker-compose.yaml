@@ -20,6 +20,7 @@ services:
       POSTGRES_DB: chokindb
       POSTGRES_HOST: openchokin-db
       POSTGRES_PORT: 5432
+      IS_DEBUG_MODE: true
     volumes:
       - type: bind
         source: "./back"
