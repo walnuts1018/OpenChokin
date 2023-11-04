@@ -121,3 +121,33 @@ func (d *dbImpl) DeleteMoneyPool(id string) error {
 
 	return nil
 }
+
+func (d *dbImpl) IsMoneyPoolSharedWithUser(id string, userID string) (bool, error) {
+	// Check if the MoneyPool with the provided ID is of type Restricted.
+	var poolType PublicType
+	query := `SELECT type FROM MoneyPool WHERE id = ?`
+	err := d.db.Get(&poolType, query, id)
+	if err != nil {
+		return false, err // or return false, nil to ignore error handling
+	}
+
+	// If not Restricted, it's not shared with specific users, so return an error or false as per your error handling policy.
+	if poolType != PublicTypeRestricted {
+		return false, nil // Pool is not restricted, hence not explicitly shared
+	}
+
+	query = `
+		SELECT EXISTS (
+			SELECT 1 FROM UserGroupMembership ugm
+			INNER JOIN RestrictedPublicationScope rps ON ugm.GroupID = rps.GroupID
+			WHERE rps.PoolID = ? AND ugm.UserID = ?
+		)`
+
+	var exists bool
+	err = d.db.Get(&exists, query, id, userID)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
