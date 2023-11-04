@@ -1,20 +1,28 @@
 package domain
 
-func (d *dbImpl) NewUser() (User, error) {
+func (d *dbImpl) NewUser(user User) (User, error) {
 	var newUser User
+	// トランザクションを開始
 	tx, err := d.db.Beginx()
 	if err != nil {
 		return newUser, err
 	}
-	err = tx.QueryRow("INSERT INTO users DEFAULT VALUES RETURNING id").Scan(&newUser.ID)
+
+	// user.IDを持つ行を挿入する。ここではidが文字列として定義されていると仮定します。
+	query := "INSERT INTO users (id) VALUES ($1) RETURNING id"
+	err = tx.QueryRow(query, user.ID).Scan(&newUser.ID)
 	if err != nil {
-		tx.Rollback()
+		tx.Rollback() // エラーがあればロールバック
 		return newUser, err
 	}
+
+	// トランザクションをコミット
 	err = tx.Commit()
 	if err != nil {
 		return newUser, err
 	}
+
+	// 新しいユーザーオブジェクトを返す
 	return newUser, nil
 }
 
