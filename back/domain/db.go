@@ -18,7 +18,7 @@ func NewDB(db *sqlx.DB) DB {
 }
 
 type DB interface {
-	NewUser() (User, error)
+	NewUser(user User) (User, error)
 	GetUser(id string) (User, error)
 	UpdateUser(user User) error
 

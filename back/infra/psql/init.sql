@@ -8,7 +8,7 @@ END$$;
 
 -- ユーザーテーブル
 CREATE TABLE IF NOT EXISTS users (
-    id BIGSERIAL PRIMARY KEY
+    id BIGINT PRIMARY KEY
 );
 
 -- ユーザーグループテーブル

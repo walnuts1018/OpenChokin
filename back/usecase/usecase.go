@@ -16,8 +16,8 @@ func NewUsecase(db domain.DB) *Usecase {
 	}
 }
 
-func (u Usecase) NewUser() (domain.User, error) {
-	user, err := u.db.NewUser()
+func (u Usecase) NewUser(user domain.User) (domain.User, error) {
+	user, err := u.db.NewUser(user)
 	if err != nil {
 		return domain.User{}, fmt.Errorf("failed to create user: %w", err)
 	}
