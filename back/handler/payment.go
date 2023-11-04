@@ -9,7 +9,7 @@ import (
 
 // updatePaymentHandler handles the PATCH request for updating a payment
 func updatePaymentHandler(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // Assuming userID retrieval from middleware
+	userID := c.MustGet("loginUserID").(string) // Assuming userID retrieval from middleware
 	moneyPoolID := c.Param("moneypool_id")
 	paymentID := c.Param("payment_id")
 
@@ -37,7 +37,7 @@ func updatePaymentHandler(c *gin.Context) {
 
 // deletePaymentHandler handles the DELETE request for a payment
 func deletePaymentHandler(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // Assuming userID retrieval from middleware
+	userID := c.MustGet("loginUserID").(string) // Assuming userID retrieval from middleware
 	paymentID := c.Param("payment_id")
 
 	err := uc.DeletePayment(userID, paymentID)
@@ -52,8 +52,8 @@ func deletePaymentHandler(c *gin.Context) {
 // POST /moneypools/:moneypool_id/payments
 // 指定されたマネープールに新しい支払いを追加する
 func postPayment(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // 認証ユーザーのIDを取得
-	moneyPoolID := c.Param("moneypool_id") // パスパラメータからマネープールIDを取得
+	userID := c.MustGet("loginUserID").(string) // 認証ユーザーのIDを取得
+	moneyPoolID := c.Param("moneypool_id")      // パスパラメータからマネープールIDを取得
 
 	// リクエストボディの構造体
 	var paymentRequest struct {
@@ -79,8 +79,8 @@ func postPayment(c *gin.Context) {
 // GET /payments
 // 指定された月の支払い情報を取得する
 func getMonthlyPayments(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // 認証ユーザーのIDを取得
-	monthStr := c.Query("month")           // クエリパラメータから月を取得
+	userID := c.MustGet("loginUserID").(string) // 認証ユーザーのIDを取得
+	monthStr := c.Query("month")                // クエリパラメータから月を取得
 
 	// "YYYY-MM"の形式であることを確認し、time.Time型にパースする
 	month, err := time.Parse("2006-01", monthStr)

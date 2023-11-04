@@ -27,7 +27,8 @@ type DB interface {
 	GetMoneyPoolsByUserID(userID string) ([]MoneyPool, error)
 	UpdateMoneyPool(moneyPool MoneyPool) error
 	DeleteMoneyPool(id string) error
-	ShareMoneyPoolWithUserGroups(moneyPoolID string, shareUserGruopIDs []string) error
+	ShareMoneyPoolWithUserGroups(id string, shareUserGruopIDs []string) error
+	IsMoneyPoolSharedWithUser(id string, userID string) (bool, error)
 
 	NewMoneyProvider(moneyProvider MoneyProvider) (MoneyProvider, error)
 	GetMoneyProvider(id string) (MoneyProvider, error)

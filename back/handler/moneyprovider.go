@@ -18,7 +18,7 @@ func createMoneyProviderHandler(c *gin.Context) {
 		return
 	}
 
-	userID := c.MustGet("userID").(string) // Assuming authentication middleware sets this.
+	userID := c.MustGet("loginUserID").(string) // Assuming authentication middleware sets this.
 	response, err := uc.AddMoneyProvider(userID, req.Name, req.Balance)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -40,7 +40,7 @@ func updateMoneyProviderHandler(c *gin.Context) {
 		return
 	}
 
-	userID := c.MustGet("userID").(string)
+	userID := c.MustGet("loginUserID").(string)
 	moneyProviderID := c.Param("moneyprovider_id")
 
 	response, err := uc.UpdateMoneyProvider(userID, moneyProviderID, req.Name, req.Balance)
@@ -54,7 +54,7 @@ func updateMoneyProviderHandler(c *gin.Context) {
 
 // Handler function for deleting a MoneyProvider.
 func deleteMoneyProviderHandler(c *gin.Context) {
-	userID := c.MustGet("userID").(string)
+	userID := c.MustGet("loginUserID").(string)
 	moneyProviderID := c.Param("moneyprovider_id")
 
 	if err := uc.DeleteMoneyProvider(userID, moneyProviderID); err != nil {

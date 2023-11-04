@@ -8,7 +8,7 @@ import (
 
 // Handler for getting user group details
 func getUserGroups(c *gin.Context) {
-	userID := c.MustGet("userID").(string)
+	userID := c.MustGet("loginUserID").(string)
 	response, err := uc.GetUserGroups(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -19,7 +19,7 @@ func getUserGroups(c *gin.Context) {
 
 // Handler for creating a new user group
 func createUserGroup(c *gin.Context) {
-	userID := c.MustGet("userID").(string)
+	userID := c.MustGet("loginUserID").(string)
 	var requestBody struct {
 		Name      string   `json:"name"`
 		MemberIDs []string `json:"member_ids"`
@@ -38,7 +38,7 @@ func createUserGroup(c *gin.Context) {
 
 // Handler for updating a user group
 func updateUserGroup(c *gin.Context) {
-	userID := c.MustGet("userID").(string)
+	userID := c.MustGet("loginUserID").(string)
 	userGroupID := c.Param("usergroup_id")
 	var requestBody struct {
 		Name      string   `json:"name"`
@@ -58,7 +58,7 @@ func updateUserGroup(c *gin.Context) {
 
 // Handler for deleting a user group
 func deleteUserGroup(c *gin.Context) {
-	userID := c.MustGet("userID").(string)
+	userID := c.MustGet("loginUserID").(string)
 	userGroupID := c.Param("usergroup_id")
 	err := uc.DeleteUserGroup(userID, userGroupID)
 	if err != nil {

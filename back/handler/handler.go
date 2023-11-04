@@ -1,9 +1,13 @@
 package handler
 
 import (
+	"context"
+	"log"
 	"net/http"
+	"strings"
 	"time"
 
+	"github.com/coreos/go-oidc"
 	"github.com/gin-gonic/gin"
 	"github.com/walnuts1018/openchokin/back/config"
 	"github.com/walnuts1018/openchokin/back/usecase"
@@ -13,9 +17,63 @@ var (
 	uc *usecase.Usecase
 )
 
-func UserMiddleware() gin.HandlerFunc {
+func userMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("userID", "1")
+		c.Set("loginUserID", "1")
+		c.Next()
+	}
+}
+
+// ミドルウェア関数
+func authMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Authorizationヘッダーを取得する
+		authHeader := c.GetHeader("Authorization")
+		// "Bearer "で始まる場合、トークンを検証する
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+			// ここでトークン検証の処理を実行する
+			// OIDCプロバイダーのURLとクライアント情報
+			issuer := "https://auth.walnuts.dev"
+			clientID := "238653199337193865@walnuts.dev"
+
+			// OIDCプロバイダーの構成情報を取得する
+			provider, err := oidc.NewProvider(context.Background(), issuer)
+			if err != nil {
+				// エラー処理はログ出力に留める
+				log.Printf("failed to get provider: %v\n", err)
+				c.Next()
+				return
+			}
+
+			// 公開鍵セットを取得してトークンを検証する
+			verifier := provider.Verifier(&oidc.Config{ClientID: clientID})
+			idToken, err := verifier.Verify(context.Background(), tokenString)
+			if err != nil {
+				// エラー処理はログ出力に留める
+				log.Printf("failed to verify token: %v\n", err)
+				c.Next()
+				return
+			}
+
+			// IDトークンのクレームを取得するための構造体
+			var claims struct {
+				Sub string `json:"sub"` // "sub"はOIDCのユーザーIDクレーム
+			}
+
+			// クレームをデコードする
+			if err := idToken.Claims(&claims); err != nil {
+				log.Printf("failed to decode claims: %v\n", err)
+				c.Next()
+				return
+			}
+
+			// クレームの情報をコンテキストにセットする
+			c.Set("loginUserID", claims.Sub)
+		}
+
+		// 次のハンドラーまたはミドルウェアを実行
 		c.Next()
 	}
 }
@@ -23,17 +81,20 @@ func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 	uc = usecase
 	r := gin.Default()
 	if config.Config.ISDebugMode == "true" {
-		r.Use(UserMiddleware())
+		r.Use(userMiddleware())
+	} else {
+		r.Use(authMiddleware())
 	}
 
 	v1 := r.Group("/v1")
 	{
 		// クエリパラメータtype=summary or detailでサマリーと詳細を分けられる。
 		// 今回はsummaryだけを実装する
-		// /moneypools?type=summary
+		// /moneypools?type=summary&user_id=204938384
 		v1.GET("/moneypools", moneyPoolsHandler)
 
 		// パスパラメータで指定されたIDのマネープール情報を返す
+		// クエリパラメータuserIDが必要
 		v1.GET("/moneypools/:moneypool_id", moneyPoolHandler)
 
 		// クエリパラメータtype=summary or detailでサマリと詳細を分けられる
@@ -43,6 +104,7 @@ func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 
 		// オプションパラメータdateを持つ
 		// /moneyinformation?date=2023-05-15
+		// クエリパラメータuserIDが必要
 		v1.GET("/moneyinformation", moneyInformationHandler)
 
 		// クエリパラメータmonthが必須パラメータである
@@ -72,49 +134,78 @@ func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 		v1.POST("/usergroups", createUserGroup)
 		v1.PATCH("/usergroups/:usergroup_id", updateUserGroup)
 		v1.DELETE("/usergroups/:usergroup_id", deleteUserGroup)
-
 	}
 	return r, nil
 }
 
-// moneyPoolsHandler はモニープールのサマリ情報を取得するハンドラです。
 func moneyPoolsHandler(c *gin.Context) {
-	// クエリパラメータ 'type' を取得し、'summary' が指定されているかチェックします。
 	queryType := c.DefaultQuery("type", "summary")
-
-	// 今回は 'summary' のみを実装しているため、それ以外の値が来た場合はエラーを返します。
 	if queryType != "summary" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid type parameter"})
 		return
 	}
 
-	// 認証ミドルウェアでuserIDを指定する
-	userID := c.MustGet("userID").(string)
+	queryUserID := c.Query("user_id")
+	if queryUserID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id parameter"})
+		return
+	}
 
-	// UsecaseのGetMoneyPoolsSummary関数を呼び出してサマリ情報を取得します。
-	summaryResponse, err := uc.GetMoneyPoolsSummary(userID)
+	// Default loginUserID to an empty string to handle non-logged-in state.
+	loginUserID := ""
+
+	// Check if userID exists and overwrite loginUserID with the actual userID if it does.
+	if userID, exists := c.Get("loginUserID"); exists {
+		var ok bool
+		loginUserID, ok = userID.(string)
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is not a string"})
+			return
+		}
+	}
+
+	// Retrieve summary information using the userID and loginUserID.
+	summaryResponse, err := uc.GetMoneyPoolsSummary(queryUserID, loginUserID)
 	if err != nil {
-		// エラーが発生した場合は、クライアントにエラーメッセージとともにステータスコード500を返します。
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get money pools summary"})
 		return
 	}
 
-	// サマリ情報をクライアントに返します。
+	// Send the retrieved summary information in the response.
 	c.JSON(http.StatusOK, summaryResponse)
 }
 
-// MoneyPoolHandler handles GET requests for a specific money pool by ID.
 func moneyPoolHandler(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // Assuming userID is set in some middleware
-	moneyPoolID := c.Param("moneypool_id")
+	queryUserID := c.Query("user_id")
+	if queryUserID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id parameter"})
+		return
+	}
 
-	response, err := uc.GetMoneyPool(userID, moneyPoolID)
+	moneyPoolID := c.Param("moneypool_id")
+	loginUserID := "" // Default to empty string to indicate no user is logged in.
+
+	// Check if userID exists in the context, indicating a logged-in state.
+	userID, exists := c.Get("loginUserID")
+	if exists {
+		// Type assert to string to make sure we have the correct format for userID.
+		var ok bool
+		loginUserID, ok = userID.(string)
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is not a string"})
+			return
+		}
+	}
+
+	// Call the use case with the userID and loginUserID to get the money pool.
+	response, err := uc.GetMoneyPool(queryUserID, loginUserID, moneyPoolID)
 	if err != nil {
 		// Handle the error, e.g., by logging and returning an appropriate HTTP status code.
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
+	// Return the response.
 	c.JSON(http.StatusOK, response)
 }
 
@@ -130,7 +221,7 @@ func moneyProvidersHandler(c *gin.Context) {
 	}
 
 	// 認証ミドルウェアでuserIDを指定する
-	userID := c.MustGet("userID").(string)
+	userID := c.MustGet("loginUserID").(string)
 
 	response, err := uc.GetMoneyProvidersSummary(userID)
 	if err != nil {
@@ -144,8 +235,26 @@ func moneyProvidersHandler(c *gin.Context) {
 
 // moneyInformationHandler は、/moneyinformation エンドポイントのリクエストを処理するハンドラです。
 func moneyInformationHandler(c *gin.Context) {
+	queryUserID := c.Query("user_id")
+	if queryUserID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user_id parameter"})
+		return
+	}
+
 	// ユーザーIDをコンテキストから取得
-	userID := c.MustGet("userID").(string)
+	loginUserID := "" // Default to empty string to indicate no user is logged in.
+
+	// Check if userID exists in the context, indicating a logged-in state.
+	userID, exists := c.Get("loginUserID")
+	if exists {
+		// Type assert to string to make sure we have the correct format for userID.
+		var ok bool
+		loginUserID, ok = userID.(string)
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is not a string"})
+			return
+		}
+	}
 
 	// オプショナルなクエリパラメータ 'date' を解析
 	dateParam := c.DefaultQuery("date", "")
@@ -161,10 +270,10 @@ func moneyInformationHandler(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format"})
 			return
 		}
-		response, err = uc.GetMoneyInformationOfDate(userID, date)
+		response, err = uc.GetMoneyInformationOfDate(queryUserID, loginUserID, date)
 	} else {
 		// 日付が指定されていない場合は現在の情報を計算
-		response, err = uc.GetMoneyInformation(userID)
+		response, err = uc.GetMoneyInformation(queryUserID, loginUserID)
 	}
 
 	// エラーハンドリング

@@ -20,7 +20,8 @@ type MoneyPoolsSummaryResponse struct {
 	Pools []MoneyPoolSummary
 }
 
-func (u Usecase) GetMoneyPoolsSummary(userID string) (MoneyPoolsSummaryResponse, error) {
+// GetMoneyPoolsSummary メソッドは、指定されたuserIDのMoneyPoolsの要約を返します。
+func (u *Usecase) GetMoneyPoolsSummary(userID string, loginUserID string) (MoneyPoolsSummaryResponse, error) {
 	moneyPools, err := u.db.GetMoneyPoolsByUserID(userID)
 	if err != nil {
 		return MoneyPoolsSummaryResponse{}, err
@@ -28,17 +29,37 @@ func (u Usecase) GetMoneyPoolsSummary(userID string) (MoneyPoolsSummaryResponse,
 
 	var pools []MoneyPoolSummary
 	for _, pool := range moneyPools {
-		sum, err := u.db.GetMoneyPoolBalance(pool.ID, false)
-		if err != nil {
-			return MoneyPoolsSummaryResponse{}, err
+		// userIDとloginUserIDが一致、またはmoneyPoolがpublicであるかを確認
+		if userID == loginUserID || pool.Type == "public" {
+			sum, balanceErr := u.db.GetMoneyPoolBalance(pool.ID, false)
+			if balanceErr != nil {
+				return MoneyPoolsSummaryResponse{}, balanceErr // エラーを返す
+			}
+			pools = append(pools, MoneyPoolSummary{
+				ID:   pool.ID,
+				Name: pool.Name,
+				Sum:  sum,
+				Type: pool.Type,
+			})
+		} else if loginUserID != "" {
+			// userIDとloginUserIDが異なる場合、共有状態を確認
+			shared, shareErr := u.db.IsMoneyPoolSharedWithUser(pool.ID, loginUserID)
+			if shareErr != nil {
+				return MoneyPoolsSummaryResponse{}, shareErr // エラーを返す
+			}
+			if shared {
+				sum, balanceErr := u.db.GetMoneyPoolBalance(pool.ID, false)
+				if balanceErr != nil {
+					return MoneyPoolsSummaryResponse{}, balanceErr // エラーを返す
+				}
+				pools = append(pools, MoneyPoolSummary{
+					ID:   pool.ID,
+					Name: pool.Name,
+					Sum:  sum,
+					Type: pool.Type,
+				})
+			}
 		}
-
-		pools = append(pools, MoneyPoolSummary{
-			ID:   pool.ID,
-			Name: pool.Name,
-			Sum:  sum,
-			Type: pool.Type,
-		})
 	}
 
 	return MoneyPoolsSummaryResponse{Pools: pools}, nil
@@ -60,22 +81,41 @@ type MoneyPoolResponse struct {
 	Payments    []PaymentSummary
 }
 
-func (u Usecase) GetMoneyPool(userID string, moneyPoolID string) (MoneyPoolResponse, error) {
+func (u Usecase) GetMoneyPool(userID string, loginUserID string, moneyPoolID string) (MoneyPoolResponse, error) {
+	// Fetch the money pool by ID
 	moneyPool, err := u.db.GetMoneyPool(moneyPoolID)
 	if err != nil {
 		return MoneyPoolResponse{}, err
 	}
 
-	// Check if the requesting user is the owner of the MoneyPool
-	if moneyPool.OwnerID != userID {
+	// Check if the login user is the owner or has access to the pool
+	var hasAccess bool
+	if userID == loginUserID {
+		hasAccess = true
+	} else if loginUserID != "" {
+		// Check if the money pool is shared with the login user or if it's public
+		shared, err := u.db.IsMoneyPoolSharedWithUser(moneyPoolID, loginUserID)
+		if err != nil {
+			return MoneyPoolResponse{}, err
+		}
+		hasAccess = shared || moneyPool.Type == domain.PublicTypePublic
+	} else {
+		// If loginUserID is empty, access is granted only if the pool is public
+		hasAccess = moneyPool.Type == domain.PublicTypePublic
+	}
+
+	// If the user has no access, return an error
+	if !hasAccess {
 		return MoneyPoolResponse{}, fmt.Errorf("unauthorized access: user %s does not have access to the money pool %s", userID, moneyPoolID)
 	}
 
+	// Fetch payments associated with the money pool
 	payments, err := u.db.GetPaymentsByMoneyPoolID(moneyPoolID)
 	if err != nil {
 		return MoneyPoolResponse{}, err
 	}
 
+	// Map payments to payment summaries
 	var paymentSummaries []PaymentSummary
 	for _, payment := range payments {
 		paymentSummaries = append(paymentSummaries, PaymentSummary{
@@ -88,6 +128,7 @@ func (u Usecase) GetMoneyPool(userID string, moneyPoolID string) (MoneyPoolRespo
 		})
 	}
 
+	// Return the money pool response
 	return MoneyPoolResponse{
 		ID:          moneyPool.ID,
 		Name:        moneyPool.Name,
