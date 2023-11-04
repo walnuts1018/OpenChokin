@@ -26,12 +26,14 @@ type DB interface {
 	GetMoneyPool(id string) (MoneyPool, error)
 	GetMoneyPoolsByUserID(userID string) ([]MoneyPool, error)
 	UpdateMoneyPool(moneyPool MoneyPool) error
+	DeleteMoneyPool(id string) error
 	ShareMoneyPoolWithUserGroups(moneyPoolID string, shareUserGruopIDs []string) error
 
 	NewMoneyProvider(moneyProvider MoneyProvider) (MoneyProvider, error)
 	GetMoneyProvider(id string) (MoneyProvider, error)
 	GetMoneyProvidersByUserID(userID string) ([]MoneyProvider, error)
 	UpdateMoneyProvider(moneyProvider MoneyProvider) error
+	DeleteMoneyProvider(id string) error
 
 	NewStore(store Store) (Store, error)
 	GetStore(id string) (Store, error)
@@ -47,7 +49,15 @@ type DB interface {
 	GetPayment(id string) (Payment, error)
 	GetPaymentsByMoneyPoolID(moneyPoolID string) ([]Payment, error)
 	UpdatePayment(payment Payment) error
+	DeletePayment(id string) error
 
 	GetMoneyPoolBalance(moneyPoolID string, includeExpceted bool) (float64, error)                       // transactionからマネープールの残高を計算する
 	GetMoneyPoolBalanceOfDate(moneyPoolID string, date time.Time, includeExpceted bool) (float64, error) // transactionからマネープールの残高を計算する（ある日までの）
+
+	NewUserGroup(userGroup UserGroup) (UserGroup, error)
+	GetUserGroups(userID string) ([]UserGroup, error)
+	GetUserGroup(id string) (UserGroup, error)
+	GetUserGroupMembers(id string) ([]User, error)
+	UpdateUserGroup(id string, name string, memberIDs []string) (UserGroup, error)
+	DeleteUserGroup(id string) error
 }

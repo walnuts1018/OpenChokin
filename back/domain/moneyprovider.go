@@ -1,6 +1,8 @@
 package domain
 
-import "github.com/pkg/errors"
+import (
+	"fmt"
+)
 
 func (d *dbImpl) NewMoneyProvider(moneyProvider MoneyProvider) (MoneyProvider, error) {
 	query := `INSERT INTO money_providers (name, creator_id, balance)
@@ -8,7 +10,7 @@ func (d *dbImpl) NewMoneyProvider(moneyProvider MoneyProvider) (MoneyProvider, e
 			  RETURNING id`
 	err := d.db.QueryRowx(query, moneyProvider).StructScan(&moneyProvider)
 	if err != nil {
-		return MoneyProvider{}, errors.Wrap(err, "Failed to create new MoneyProvider")
+		return MoneyProvider{}, fmt.Errorf("failed to create new MoneyProvider: %v", err)
 	}
 	return moneyProvider, nil
 }
@@ -34,4 +36,23 @@ func (d *dbImpl) UpdateMoneyProvider(moneyProvider MoneyProvider) error {
 	query := `UPDATE money_provider SET name = :name, balance = :balance WHERE id = :id`
 	_, err := d.db.NamedExec(query, moneyProvider)
 	return err
+}
+
+func (d *dbImpl) DeleteMoneyProvider(id string) error {
+	query := `DELETE FROM money_providers WHERE id = $1`
+	result, err := d.db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("could not delete money provider: %v", err)
+	}
+
+	// 結果から影響を受けた行の数を確認します。
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not determine rows affected: %v", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rows affected, perhaps the money provider with id %s does not exist", id)
+	}
+
+	return nil
 }

@@ -102,3 +102,22 @@ func (d *dbImpl) ShareMoneyPoolWithUserGroups(moneyPoolID string, shareUserGroup
 
 	return tx.Commit()
 }
+
+func (d *dbImpl) DeleteMoneyPool(id string) error {
+	query := `DELETE FROM money_pool WHERE id = $1`
+	result, err := d.db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("could not delete money pool: %v", err)
+	}
+
+	// Execの結果から影響を受けた行の数を確認します。Deleteが実行されなかった場合にはエラーを返すことも可能です。
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("could not determine rows affected: %v", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("no rows affected, nothing to delete")
+	}
+
+	return nil
+}

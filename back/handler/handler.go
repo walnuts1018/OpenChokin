@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/walnuts1018/openchokin/back/domain"
 	"github.com/walnuts1018/openchokin/back/usecase"
 )
 
@@ -35,12 +34,33 @@ func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 		// /moneyinformation?date=2023-05-15
 		v1.GET("/moneyinformation", moneyInformationHandler)
 
-		// リクエストボディの構造体を適切に定義してください
-		v1.POST("/moneypools/:moneypool_id/payments", postPayment)
-
 		// クエリパラメータmonthが必須パラメータである
 		// /payments?month=2023-05
 		v1.GET("/payments", getMonthlyPayments)
+
+		// Paymentの追加・修正・削除
+		v1.POST("/moneypools/:moneypool_id/payments", postPayment)
+		v1.PATCH("/moneypools/:moneypool_id/payments/:payment_id", updatePaymentHandler)
+		v1.DELETE("/moneypools/:moneypool_id/payments/:payment_id", deletePaymentHandler)
+
+		// MoneyProviderの追加・修正・削除
+		v1.POST("/moneyproviders", createMoneyProviderHandler)
+		v1.PATCH("/moneyproviders/:moneyprovider_id", updateMoneyProviderHandler)
+		v1.DELETE("/moneyproviders/:moneyprovider_id", deleteMoneyProviderHandler)
+
+		// MoneyPoolの追加・修正・削除
+		v1.POST("/moneypools", createMoneyPool)
+		v1.PATCH("/moneypools/:moneypool_id", updateMoneyPool)
+		v1.DELETE("/moneypools/:moneypool_id", deleteMoneyPool)
+		// 公開範囲の設定(対象となるマネープールに対して、リクエストのjsonで指定されたユーザーグループに対して)
+		v1.POST("/moneypools/:moneypool_id/publicationscope", changePublicationScope)
+
+		// ユーザーグループの編集
+		// これだけで詳細情報を全部取得する
+		v1.GET("/usergroups", getUserGroups)
+		v1.POST("/usergroups", createUserGroup)
+		v1.PATCH("/usergroups/:usergroup_id", updateUserGroup)
+		v1.DELETE("/usergroups/:usergroup_id", deleteUserGroup)
 
 	}
 	return r, nil
@@ -144,82 +164,4 @@ func moneyInformationHandler(c *gin.Context) {
 
 	// 成功レスポンスを返す
 	c.JSON(http.StatusOK, response)
-}
-
-// POST /moneypools/:moneypool_id/payments
-// 指定されたマネープールに新しい支払いを追加する
-func postPayment(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // 認証ユーザーのIDを取得
-	moneyPoolID := c.Param("moneypool_id") // パスパラメータからマネープールIDを取得
-
-	// リクエストボディの構造体
-	var paymentRequest struct {
-		Title       string  `json:"title"`
-		Amount      float64 `json:"amount"`
-		Description string  `json:"description"`
-		IsPlanned   bool    `json:"is_planned"`
-	}
-	if err := c.BindJSON(&paymentRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
-		return
-	}
-
-	err := uc.AddNewPayment(userID, moneyPoolID, paymentRequest.Title, paymentRequest.Amount, paymentRequest.Description, paymentRequest.IsPlanned)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.Status(http.StatusCreated)
-}
-
-// GET /payments
-// 指定された月の支払い情報を取得する
-func getMonthlyPayments(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // 認証ユーザーのIDを取得
-	monthStr := c.Query("month")           // クエリパラメータから月を取得
-
-	// "YYYY-MM"の形式であることを確認し、time.Time型にパースする
-	month, err := time.Parse("2006-01", monthStr)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid month format"})
-		return
-	}
-
-	response, err := uc.GetMonthlyPayments(userID, month)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, response)
-}
-
-func AddNewUser(c *gin.Context) {
-	user, err := uc.NewUser()
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(200, gin.H{"user": user})
-}
-
-func GetUser(c *gin.Context) {
-	userID := c.Param("userid")
-	user, err := uc.GetUser(userID)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(200, gin.H{"user": user})
-}
-
-func UpdateUser(c *gin.Context) {
-	userID := c.Param("userid")
-	user := domain.User{ID: userID}
-	err := uc.UpdateUser(user)
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-	}
-	c.JSON(200, gin.H{"user": user})
 }
