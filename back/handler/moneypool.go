@@ -102,7 +102,18 @@ func getMoneyPool(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// Handler function for creating a new MoneyPool
+// createMoneyPool は新しいマネープールを作成します。
+// @Summary 新しいマネープールを作成
+// @Description 認証済みユーザーのための新しいマネープールを作成します。
+// @Tags moneypools
+// @Accept  json
+// @Produce  json
+// @Param loginUserID header string true "ログインユーザーID"
+// @Param body body struct{Name string `json:"name"; Description string `json:"description"; Type domain.PublicType `json:"type"`} true "マネープール情報"
+// @Success 200 {object} MoneyPoolResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /moneypools [post]
 func createMoneyPool(c *gin.Context) {
 	userID := c.MustGet("loginUserID").(string) // Get the authenticated user's ID
 	var request struct {
@@ -126,7 +137,19 @@ func createMoneyPool(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// Handler function for updating an existing MoneyPool
+// updateMoneyPool は指定されたIDのマネープールを更新します。
+// @Summary 指定されたマネープールを更新
+// @Description 認証済みユーザーが指定したIDのマネープールの情報を更新します。
+// @Tags moneypools
+// @Accept  json
+// @Produce  json
+// @Param loginUserID header string true "ログインユーザーID"
+// @Param moneypool_id path string true "マネープールID"
+// @Param body body struct{Name string `json:"name"; Description string `json:"description"; Type domain.PublicType `json:"type"`} true "更新するマネープール情報"
+// @Success 200 {object} MoneyPoolResponse
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /moneypools/{moneypool_id} [patch]
 func updateMoneyPool(c *gin.Context) {
 	userID := c.MustGet("loginUserID").(string) // Get the authenticated user's ID
 	moneyPoolID := c.Param("moneypool_id")
@@ -151,7 +174,17 @@ func updateMoneyPool(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// Handler function for deleting an existing MoneyPool
+// deleteMoneyPool deletes a money pool.
+// @Summary マネープールの削除
+// @Description 認証されたユーザーのマネープールを削除します。
+// @Tags moneypools
+// @Accept  json
+// @Produce  json
+// @Param   moneypool_id   path      string  true  "マネープールID"
+// @Success 200 {string} string "OK"
+// @Failure 400 {object} map[string]interface{} "Bad Request: Invalid input"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error: Execution failure"
+// @Router /v1/moneypools/{moneypool_id} [delete]
 func deleteMoneyPool(c *gin.Context) {
 	userID := c.MustGet("loginUserID").(string) // Get the authenticated user's ID
 	moneyPoolID := c.Param("moneypool_id")
@@ -163,6 +196,18 @@ func deleteMoneyPool(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// changePublicationScope changes the publication scope of a money pool.
+// @Summary マネープールの公開範囲変更
+// @Description 認証されたユーザーが指定したマネープールの公開範囲を変更します。
+// @Tags moneypools
+// @Accept  json
+// @Produce  json
+// @Param   moneypool_id   path      string  true  "マネープールID"
+// @Param   user_group_ids body      []string true  "ユーザーグループIDの配列"
+// @Success 200 {string} string "OK"
+// @Failure 400 {object} map[string]interface{} "Bad Request: Invalid input"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error: Execution failure"
+// @Router /v1/moneypools/{moneypool_id}/publicationscope [post]
 func changePublicationScope(c *gin.Context) {
 	userID := c.MustGet("loginUserID").(string) // Get the authenticated user's ID
 	moneyPoolID := c.Param("moneypool_id")

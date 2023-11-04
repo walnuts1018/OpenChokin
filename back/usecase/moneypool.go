@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/walnuts1018/openchokin/back/domain"
@@ -22,18 +23,20 @@ type MoneyPoolsSummaryResponse struct {
 
 // GetMoneyPoolsSummary メソッドは、指定されたuserIDのMoneyPoolsの要約を返します。
 func (u *Usecase) GetMoneyPoolsSummary(userID string, loginUserID string) (MoneyPoolsSummaryResponse, error) {
+	log.Printf("ユーザーのMoneyPoolsの概要取得開始: ユーザーID: %s, ログインユーザーID: %s", userID, loginUserID)
 	moneyPools, err := u.db.GetMoneyPoolsByUserID(userID)
 	if err != nil {
+		log.Printf("ユーザーのMoneyPoolsの取得に失敗: ユーザーID: %s, エラー: %v", userID, err)
 		return MoneyPoolsSummaryResponse{}, err
 	}
 
 	var pools []MoneyPoolSummary
 	for _, pool := range moneyPools {
-		// userIDとloginUserIDが一致、またはmoneyPoolがpublicであるかを確認
 		if userID == loginUserID || pool.Type == "public" {
 			sum, balanceErr := u.db.GetMoneyPoolBalance(pool.ID, false)
 			if balanceErr != nil {
-				return MoneyPoolsSummaryResponse{}, balanceErr // エラーを返す
+				log.Printf("MoneyPoolのバランス取得に失敗: Pool ID: %s, エラー: %v", pool.ID, balanceErr)
+				return MoneyPoolsSummaryResponse{}, balanceErr
 			}
 			pools = append(pools, MoneyPoolSummary{
 				ID:   pool.ID,
@@ -42,15 +45,16 @@ func (u *Usecase) GetMoneyPoolsSummary(userID string, loginUserID string) (Money
 				Type: pool.Type,
 			})
 		} else if loginUserID != "" {
-			// userIDとloginUserIDが異なる場合、共有状態を確認
 			shared, shareErr := u.db.IsMoneyPoolSharedWithUser(pool.ID, loginUserID)
 			if shareErr != nil {
-				return MoneyPoolsSummaryResponse{}, shareErr // エラーを返す
+				log.Printf("MoneyPoolの共有状態確認に失敗: Pool ID: %s, ログインユーザーID: %s, エラー: %v", pool.ID, loginUserID, shareErr)
+				return MoneyPoolsSummaryResponse{}, shareErr
 			}
 			if shared {
 				sum, balanceErr := u.db.GetMoneyPoolBalance(pool.ID, false)
 				if balanceErr != nil {
-					return MoneyPoolsSummaryResponse{}, balanceErr // エラーを返す
+					log.Printf("MoneyPoolのバランス取得に失敗: Pool ID: %s, エラー: %v", pool.ID, balanceErr)
+					return MoneyPoolsSummaryResponse{}, balanceErr
 				}
 				pools = append(pools, MoneyPoolSummary{
 					ID:   pool.ID,
@@ -62,6 +66,7 @@ func (u *Usecase) GetMoneyPoolsSummary(userID string, loginUserID string) (Money
 		}
 	}
 
+	log.Printf("ユーザーのMoneyPoolsの概要取得完了: ユーザーID: %s", userID)
 	return MoneyPoolsSummaryResponse{Pools: pools}, nil
 }
 
@@ -82,36 +87,39 @@ type MoneyPoolResponse struct {
 }
 
 func (u Usecase) GetMoneyPool(userID string, loginUserID string, moneyPoolID string) (MoneyPoolResponse, error) {
+	log.Printf("ユーザーID: %sのためのMoneyPoolID: %sの取得を試みます。", userID, moneyPoolID)
+
 	// Fetch the money pool by ID
 	moneyPool, err := u.db.GetMoneyPool(moneyPoolID)
 	if err != nil {
+		log.Printf("MoneyPoolID: %sの取得に失敗しました。エラー: %v", moneyPoolID, err)
 		return MoneyPoolResponse{}, err
 	}
 
-	// Check if the login user is the owner or has access to the pool
-	var hasAccess bool
+	// Check access rights
+	hasAccess := false
 	if userID == loginUserID {
 		hasAccess = true
 	} else if loginUserID != "" {
-		// Check if the money pool is shared with the login user or if it's public
 		shared, err := u.db.IsMoneyPoolSharedWithUser(moneyPoolID, loginUserID)
 		if err != nil {
+			log.Printf("MoneyPoolID: %sの共有状態の確認に失敗しました。エラー: %v", moneyPoolID, err)
 			return MoneyPoolResponse{}, err
 		}
 		hasAccess = shared || moneyPool.Type == domain.PublicTypePublic
 	} else {
-		// If loginUserID is empty, access is granted only if the pool is public
 		hasAccess = moneyPool.Type == domain.PublicTypePublic
 	}
 
-	// If the user has no access, return an error
 	if !hasAccess {
+		log.Printf("ユーザーID: %sはMoneyPoolID: %sへのアクセス権がありません。", userID, moneyPoolID)
 		return MoneyPoolResponse{}, fmt.Errorf("unauthorized access: user %s does not have access to the money pool %s", userID, moneyPoolID)
 	}
 
 	// Fetch payments associated with the money pool
 	payments, err := u.db.GetPaymentsByMoneyPoolID(moneyPoolID)
 	if err != nil {
+		log.Printf("MoneyPoolID: %sに関連する支払いの取得に失敗しました。エラー: %v", moneyPoolID, err)
 		return MoneyPoolResponse{}, err
 	}
 
@@ -128,7 +136,7 @@ func (u Usecase) GetMoneyPool(userID string, loginUserID string, moneyPoolID str
 		})
 	}
 
-	// Return the money pool response
+	log.Printf("MoneyPoolID: %sに関する情報を正常に取得しました。", moneyPoolID)
 	return MoneyPoolResponse{
 		ID:          moneyPool.ID,
 		Name:        moneyPool.Name,
@@ -138,7 +146,10 @@ func (u Usecase) GetMoneyPool(userID string, loginUserID string, moneyPoolID str
 	}, nil
 }
 
+// AddMoneyPool adds a new money pool to the database and logs the process in Japanese.
 func (u Usecase) AddMoneyPool(userID string, name string, description string, publicType domain.PublicType) (MoneyPoolResponse, error) {
+	log.Printf("ユーザーID: %sによる新しいマネープールの作成を開始します。名前: %s", userID, name)
+
 	newMoneyPool := domain.MoneyPool{
 		Name:        name,
 		Description: description,
@@ -148,9 +159,11 @@ func (u Usecase) AddMoneyPool(userID string, name string, description string, pu
 
 	createdMoneyPool, err := u.db.NewMoneyPool(newMoneyPool)
 	if err != nil {
+		log.Printf("マネープールの作成中にエラーが発生しました: %v", err)
 		return MoneyPoolResponse{}, err
 	}
 
+	log.Printf("マネープールが正常に作成されました。ID: %s", createdMoneyPool.ID)
 	return MoneyPoolResponse{
 		ID:          createdMoneyPool.ID,
 		Name:        createdMoneyPool.Name,
@@ -160,15 +173,19 @@ func (u Usecase) AddMoneyPool(userID string, name string, description string, pu
 	}, nil
 }
 
+// UpdateMoneyPool updates an existing money pool and logs the process in Japanese.
 func (u Usecase) UpdateMoneyPool(userID string, moneyPoolID string, name string, description string, publicationType domain.PublicType) (MoneyPoolResponse, error) {
-	// Fetch the existing money pool to check ownership
+	log.Printf("ユーザーID: %sがマネープールID: %sを更新しようとしています。", userID, moneyPoolID)
+
 	existingMoneyPool, err := u.db.GetMoneyPool(moneyPoolID)
 	if err != nil {
+		log.Printf("マネープールID: %sの取得中にエラーが発生しました: %v", moneyPoolID, err)
 		return MoneyPoolResponse{}, err
 	}
 
 	if existingMoneyPool.OwnerID != userID {
-		return MoneyPoolResponse{}, errors.New("you are not authorized to update this money pool")
+		log.Printf("ユーザーID: %sはマネープールID: %sを更新する権限がありません。", userID, moneyPoolID)
+		return MoneyPoolResponse{}, errors.New("更新権限がありません")
 	}
 
 	updatedMoneyPool := domain.MoneyPool{
@@ -181,9 +198,11 @@ func (u Usecase) UpdateMoneyPool(userID string, moneyPoolID string, name string,
 
 	err = u.db.UpdateMoneyPool(updatedMoneyPool)
 	if err != nil {
+		log.Printf("マネープールID: %sの更新中にエラーが発生しました: %v", moneyPoolID, err)
 		return MoneyPoolResponse{}, err
 	}
 
+	log.Printf("マネープールID: %sが正常に更新されました。", moneyPoolID)
 	return MoneyPoolResponse{
 		ID:          updatedMoneyPool.ID,
 		Name:        updatedMoneyPool.Name,
@@ -192,46 +211,68 @@ func (u Usecase) UpdateMoneyPool(userID string, moneyPoolID string, name string,
 	}, nil
 }
 
+// DeleteMoneyPool deletes an existing money pool and logs the process in Japanese.
 func (u Usecase) DeleteMoneyPool(userID string, moneyPoolID string) error {
+	log.Printf("ユーザーID: %sがマネープールID: %sの削除を試みます。", userID, moneyPoolID)
+
 	moneyPool, err := u.db.GetMoneyPool(moneyPoolID)
 	if err != nil {
+		log.Printf("削除するマネープールID: %sの取得中にエラーが発生しました: %v", moneyPoolID, err)
 		return err
 	}
 
 	if moneyPool.OwnerID != userID {
-		return errors.New("you are not authorized to delete this money pool")
+		log.Printf("ユーザーID: %sにはマネープールID: %sを削除する権限がありません。", userID, moneyPoolID)
+		return errors.New("削除権限がありません")
 	}
 
-	return u.db.DeleteMoneyPool(moneyPoolID)
+	err = u.db.DeleteMoneyPool(moneyPoolID)
+	if err != nil {
+		log.Printf("マネープールID: %sの削除中にエラーが発生しました: %v", moneyPoolID, err)
+		return err
+	}
+
+	log.Printf("マネープールID: %sが正常に削除されました。", moneyPoolID)
+	return nil
 }
 
+// ChangePublicationScope changes the scope of publication for a money pool and logs the process in Japanese.
 func (u *Usecase) ChangePublicationScope(userID string, moneyPoolID string, userGroupIDs []string) error {
+	log.Printf("ユーザーID: %sによるマネープールID: %sの公開範囲変更を試みます。", userID, moneyPoolID)
+
 	// Retrieve the MoneyPool by its ID to check its publication type.
 	moneyPool, err := u.db.GetMoneyPool(moneyPoolID)
 	if err != nil {
+		log.Printf("マネープールID: %sの取得に失敗しました: %v", moneyPoolID, err)
 		// Return error if the MoneyPool cannot be retrieved.
 		return err
 	}
 
 	// Check if the owner of the MoneyPool is the user making the request.
 	if moneyPool.OwnerID != userID {
+		errMsg := fmt.Sprintf("ユーザーID: %sはマネープールID: %sの所有者ではありません。", userID, moneyPoolID)
+		log.Println(errMsg)
 		// Return an error if the user is not the owner.
-		return fmt.Errorf("user %s is not the owner of MoneyPool %s", userID, moneyPoolID)
+		return errors.New(errMsg)
 	}
 
 	// Check if the MoneyPool's publication type is restricted.
 	if moneyPool.Type != domain.PublicTypeRestricted {
+		errMsg := fmt.Sprintf("マネープールID: %sの公開タイプは制限されていません。", moneyPoolID)
+		log.Println(errMsg)
 		// Return an error if the publication type is not restricted.
-		return fmt.Errorf("moneyPool %s publication type is not restricted", moneyPoolID)
+		return errors.New(errMsg)
 	}
 
 	// If the publication type is restricted, share the MoneyPool with user groups.
 	err = u.db.ShareMoneyPoolWithUserGroups(moneyPoolID, userGroupIDs)
 	if err != nil {
+		log.Printf("ユーザーグループにマネープールID: %sの共有に失敗しました: %v", moneyPoolID, err)
 		// Return error if sharing fails.
 		return err
 	}
 
+	log.Printf("マネープールID: %sをユーザーグループに正常に共有しました。", moneyPoolID)
 	// Return nil if sharing is successful.
 	return nil
 }

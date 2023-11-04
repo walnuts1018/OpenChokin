@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/walnuts1018/openchokin/back/domain"
 )
@@ -16,8 +17,10 @@ type MoneyProvidersSummaryResponse struct {
 }
 
 func (u Usecase) GetMoneyProvidersSummary(userID string) (MoneyProvidersSummaryResponse, error) {
+	log.Printf("ユーザーID %s のMoneyProvidersの概要を取得を開始します。", userID)
 	moneyProviders, err := u.db.GetMoneyProvidersByUserID(userID)
 	if err != nil {
+		log.Printf("ユーザーID %s のMoneyProvidersの取得中にエラーが発生しました: %v", userID, err)
 		return MoneyProvidersSummaryResponse{}, err
 	}
 
@@ -25,8 +28,7 @@ func (u Usecase) GetMoneyProvidersSummary(userID string) (MoneyProvidersSummaryR
 	for _, provider := range moneyProviders {
 		balance, err := u.db.GetMoneyPoolBalance(provider.ID, false)
 		if err != nil {
-			// handle the error according to your error policy
-			// for example, you could log it and continue with the next provider
+			log.Printf("MoneyProvider ID %s の残高取得時にエラーが発生しました。エラーを記録し、次のプロバイダーに続けます: %v", provider.ID, err)
 			continue
 		}
 		providersSummary = append(providersSummary, MoneyProviderSummary{
@@ -34,8 +36,10 @@ func (u Usecase) GetMoneyProvidersSummary(userID string) (MoneyProvidersSummaryR
 			Name:    provider.Name,
 			Balance: balance,
 		})
+		log.Printf("MoneyProvider ID %s: 名前：%s, 残高：%f", provider.ID, provider.Name, balance)
 	}
 
+	log.Printf("ユーザーID %s のMoneyProvidersの概要取得が完了しました。", userID)
 	return MoneyProvidersSummaryResponse{Providers: providersSummary}, nil
 }
 
@@ -46,20 +50,20 @@ type MoneyProviderResponse struct {
 	Balance   float64
 }
 
-// UpdateMoneyProvider updates an existing money provider's name and balance.
 func (u Usecase) UpdateMoneyProvider(userID string, moneyProviderID string, name string, balance float64) (MoneyProviderResponse, error) {
-	// Get the existing MoneyProvider to check if it belongs to the user.
+	log.Printf("MoneyProvider ID %s の更新を開始します。ユーザーID: %s", moneyProviderID, userID)
+
 	existingProvider, err := u.db.GetMoneyProvider(moneyProviderID)
 	if err != nil {
+		log.Printf("MoneyProvider ID %s のデータ取得中にエラーが発生しました。エラー: %v", moneyProviderID, err)
 		return MoneyProviderResponse{}, err
 	}
 
-	// Check if the user is authorized to update the MoneyProvider.
 	if existingProvider.CreatorID != userID {
+		log.Printf("ユーザーID %s はMoneyProvider ID %s の更新が許可されていません。", userID, moneyProviderID)
 		return MoneyProviderResponse{}, fmt.Errorf("unauthorized to update money provider: %s", moneyProviderID)
 	}
 
-	// Update the MoneyProvider details.
 	updatedProvider := domain.MoneyProvider{
 		ID:        moneyProviderID,
 		Name:      name,
@@ -67,13 +71,13 @@ func (u Usecase) UpdateMoneyProvider(userID string, moneyProviderID string, name
 		Balance:   balance,
 	}
 
-	// Use the DB interface method to update.
 	err = u.db.UpdateMoneyProvider(updatedProvider)
 	if err != nil {
+		log.Printf("MoneyProvider ID %s の更新中にエラーが発生しました。エラー: %v", moneyProviderID, err)
 		return MoneyProviderResponse{}, err
 	}
 
-	// Return the updated MoneyProvider response.
+	log.Printf("MoneyProvider ID %s の更新が完了しました。", moneyProviderID)
 	return MoneyProviderResponse{
 		ID:        updatedProvider.ID,
 		Name:      updatedProvider.Name,
@@ -82,22 +86,22 @@ func (u Usecase) UpdateMoneyProvider(userID string, moneyProviderID string, name
 	}, nil
 }
 
-// AddMoneyProvider adds a new money provider for a user with the given name and balance.
 func (u Usecase) AddMoneyProvider(userID string, name string, balance float64) (MoneyProviderResponse, error) {
-	// Create a new MoneyProvider instance.
+	log.Printf("新しいMoneyProviderの追加を開始します。ユーザーID: %s", userID)
+
 	newProvider := domain.MoneyProvider{
 		Name:      name,
 		CreatorID: userID,
 		Balance:   balance,
 	}
 
-	// Use the DB interface method to create a new MoneyProvider.
 	createdProvider, err := u.db.NewMoneyProvider(newProvider)
 	if err != nil {
+		log.Printf("新しいMoneyProviderの作成中にエラーが発生しました。エラー: %v", err)
 		return MoneyProviderResponse{}, err
 	}
 
-	// Return the response with the new MoneyProvider details.
+	log.Printf("新しいMoneyProviderが作成されました。ID: %s", createdProvider.ID)
 	return MoneyProviderResponse{
 		ID:        createdProvider.ID,
 		Name:      createdProvider.Name,
@@ -106,24 +110,26 @@ func (u Usecase) AddMoneyProvider(userID string, name string, balance float64) (
 	}, nil
 }
 
-// DeleteMoneyProvider deletes an existing money provider.
 func (u Usecase) DeleteMoneyProvider(userID string, moneyProviderID string) error {
-	// Get the existing MoneyProvider to check if it belongs to the user.
+	log.Printf("MoneyProvider ID %s の削除を試みます。ユーザーID: %s", moneyProviderID, userID)
+
 	provider, err := u.db.GetMoneyProvider(moneyProviderID)
 	if err != nil {
+		log.Printf("MoneyProvider ID %s のデータ取得中にエラーが発生しました。エラー: %v", moneyProviderID, err)
 		return err
 	}
 
-	// Check if the user is authorized to delete the MoneyProvider.
 	if provider.CreatorID != userID {
+		log.Printf("ユーザーID %s はMoneyProvider ID %s の削除が許可されていません。", userID, moneyProviderID)
 		return fmt.Errorf("unauthorized to delete money provider: %s", moneyProviderID)
 	}
 
-	// Use the DB interface method to delete the MoneyProvider.
 	err = u.db.DeleteMoneyProvider(moneyProviderID)
 	if err != nil {
+		log.Printf("MoneyProvider ID %s の削除中にエラーが発生しました。エラー: %v", moneyProviderID, err)
 		return err
 	}
 
+	log.Printf("MoneyProvider ID %s の削除が完了しました。", moneyProviderID)
 	return nil
 }
