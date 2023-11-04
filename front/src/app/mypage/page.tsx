@@ -100,17 +100,6 @@ function MypageContents() {
   const [moneyPoolIndex, setMoneyPoolIndex] = useState(0);
   const [swiper, setSwiper] = useState<SwiperClass>();
 
-  async function addTransaction(input: HTMLInputElement) {
-    const res = await fetch("/api/httptest", {
-      method: "POST",
-      body: JSON.stringify({
-        name: input.value,
-      }),
-    });
-    const data = await res.json();
-    console.log(data);
-  }
-
   if (session && session.user) {
     return (
       <ThemeProvider theme={theme}>
@@ -217,10 +206,7 @@ function MypageContents() {
                 ))}
               </Swiper>
               <div className="flex justify-center items-center h-16 w-full">
-                <AddButton
-                  color={moneyPools[moneyPoolIndex].color}
-                  addFunction={addTransaction}
-                />
+                <AddButton color={moneyPools[moneyPoolIndex].color} />
               </div>
             </div>
           </div>

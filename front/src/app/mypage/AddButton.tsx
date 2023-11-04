@@ -1,13 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Plus } from "react-feather";
 
-export function AddButton({
-  color,
-  addFunction,
-}: {
-  color: string;
-  addFunction: (input: HTMLInputElement) => void;
-}) {
+export function AddButton({ color }: { color: string }) {
   const [isAddMode, setIsAddMode] = useState(false);
   const inputEl = useRef<HTMLInputElement>(null!);
   useEffect(() => {
@@ -16,6 +10,17 @@ export function AddButton({
       inputEl.current.focus();
     }
   }, [isAddMode]);
+
+  async function addTransaction(input: HTMLInputElement) {
+    const res = await fetch("/api/httptest", {
+      method: "POST",
+      body: JSON.stringify({
+        name: input.value,
+      }),
+    });
+    const data = await res.json();
+    console.log(data);
+  }
 
   return (
     <div
@@ -49,7 +54,7 @@ export function AddButton({
             tabIndex={0}
             onClick={async (e) => {
               e.preventDefault();
-              await addFunction(inputEl.current);
+              await addTransaction(inputEl.current);
             }}
           >
             <Plus className="h-full w-full" />
@@ -84,7 +89,7 @@ export function AddButton({
                     e.currentTarget.blur();
                   }
                   e.preventDefault();
-                  await addFunction(inputEl.current);
+                  await addTransaction(inputEl.current);
                 }
               }}
               placeholder="金額"

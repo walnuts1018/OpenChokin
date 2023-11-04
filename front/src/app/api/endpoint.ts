@@ -1,0 +1,1 @@
+export const BackendEndpoint = "https://api-openchokin.walnuts.dev/v1"
