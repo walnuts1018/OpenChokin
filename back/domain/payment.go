@@ -44,3 +44,28 @@ func (d *dbImpl) UpdatePayment(payment Payment) error {
 	}
 	return nil
 }
+
+func (d *dbImpl) DeletePayment(id string) error {
+	// DELETE SQL文を実行します。
+	query := `DELETE FROM payment WHERE id = $1`
+	result, err := d.db.Exec(query, id)
+	if err != nil {
+		// SQL実行エラーを返します。
+		return fmt.Errorf("error deleting payment with id %s: %v", id, err)
+	}
+
+	// 影響を受けた行の数を確認します。
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		// 影響を受けた行数の確認エラーを返します。
+		return fmt.Errorf("error getting rows affected during deletion of payment with id %s: %v", id, err)
+	}
+
+	if rowsAffected == 0 {
+		// 削除する行がなかった場合、エラーを返します。
+		return fmt.Errorf("no payment found with id %s", id)
+	}
+
+	// 削除が成功した場合、nilを返します。
+	return nil
+}
