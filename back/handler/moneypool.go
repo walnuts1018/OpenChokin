@@ -9,7 +9,7 @@ import (
 
 // Handler function for creating a new MoneyPool
 func createMoneyPool(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // Get the authenticated user's ID
+	userID := c.MustGet("loginUserID").(string) // Get the authenticated user's ID
 	var request struct {
 		Name        string            `json:"name"`
 		Description string            `json:"description"`
@@ -33,7 +33,7 @@ func createMoneyPool(c *gin.Context) {
 
 // Handler function for updating an existing MoneyPool
 func updateMoneyPool(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // Get the authenticated user's ID
+	userID := c.MustGet("loginUserID").(string) // Get the authenticated user's ID
 	moneyPoolID := c.Param("moneypool_id")
 	var request struct {
 		Name        string            `json:"name"`
@@ -58,7 +58,7 @@ func updateMoneyPool(c *gin.Context) {
 
 // Handler function for deleting an existing MoneyPool
 func deleteMoneyPool(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // Get the authenticated user's ID
+	userID := c.MustGet("loginUserID").(string) // Get the authenticated user's ID
 	moneyPoolID := c.Param("moneypool_id")
 	err := uc.DeleteMoneyPool(userID, moneyPoolID)
 	if err != nil {
@@ -69,7 +69,7 @@ func deleteMoneyPool(c *gin.Context) {
 }
 
 func changePublicationScope(c *gin.Context) {
-	userID := c.MustGet("userID").(string) // Get the authenticated user's ID
+	userID := c.MustGet("loginUserID").(string) // Get the authenticated user's ID
 	moneyPoolID := c.Param("moneypool_id")
 
 	// リクエストボディから
