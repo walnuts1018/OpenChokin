@@ -31,17 +31,16 @@ export const authOptions: NextAuthOptions = {
       }
       if (account) {
         token.accessToken = account.access_token;
+        token.idToken = account.id_token;
       }
       return token;
     },
     session: ({ session, token }: { token: JWT; session?: any }) => {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          role: token.role,
-        },
-      };
+      session.user.role = token.role;
+      session.user.idToken = token.idToken;
+      session.user.sub = token.sub;
+      console.log(session);
+      return session;
     },
   },
   pages: {

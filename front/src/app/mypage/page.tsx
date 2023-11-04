@@ -2,13 +2,14 @@
 import { useSession } from "next-auth/react";
 import { NextAuthProvider } from "../providers";
 import { TransactionTable } from "./transactionTable";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, ReactElement } from "react";
 import { Swiper, SwiperSlide, SwiperClass } from "swiper/react";
-import { Plus } from "react-feather";
 import { Balance } from "./Balance";
-import { MoneyPool } from "./type";
+import { MoneyPool, MoneyProviderSum } from "./type";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Image from "next/image";
+import { AddButton } from "./AddButton";
+import { MoneyPoolSum } from "./type";
 
 export default function Mypage() {
   return (
@@ -18,52 +19,14 @@ export default function Mypage() {
   );
 }
 
-const moneyPools: MoneyPool[] = [
-  {
-    id: 1,
-    name: "食費",
-    description: "食費",
-    is_world_public: true,
-    owner_id: 1,
-    color: "#f9842c",
-    amount: 1000,
-    emoji: "🍙",
-    transactions: [],
-  },
-  {
-    id: 2,
-    name: "生活費",
-    description: "生活費",
-    is_world_public: true,
-    owner_id: 1,
-    color: "#f93873",
-    amount: 10000,
-    emoji: "🏠",
-    transactions: [],
-  },
-  {
-    id: 3,
-    name: "飲み",
-    description: "飲み",
-    is_world_public: true,
-    owner_id: 1,
-    color: "#8f10ff",
-    amount: 100000,
-    emoji: "🍺",
-    transactions: [],
-  },
+const moneyPoolColors = [
+  "#00BFFF",
+  "#FFA500",
+  "#FF69B4",
+  "#ADFF2F",
+  "#D8BFD8",
+  "#CD853F",
 ];
-
-moneyPools.forEach((moneyPool) => {
-  for (let i = 0; i < 100; i++) {
-    moneyPool.transactions.push({
-      id: i,
-      date: new Date(),
-      title: moneyPool.name + " 取引 " + i,
-      amount: 1000,
-    });
-  }
-});
 
 const theme = createTheme({
   palette: {
@@ -81,26 +44,62 @@ function MypageContents() {
   const { data: session } = useSession();
   const [moneyPoolIndex, setMoneyPoolIndex] = useState(0);
   const [swiper, setSwiper] = useState<SwiperClass>();
-  const [isAddMode, setIsAddMode] = useState(false);
-  const inputEl = useRef<HTMLInputElement>(null!);
-
-  async function addTransaction() {
-    const res = await fetch("/api/httptest", {
-      method: "POST",
-      body: JSON.stringify({
-        name: inputEl.current.value,
-      }),
-    });
-    const data = await res.json();
-    console.log(data);
-  }
-
+  const [moneyPoolSums, setMoneyPoolSums] = useState<MoneyPoolSum[]>([
+    {
+      id: "1",
+      name: "食費",
+      Sum: 1000,
+      Type: "public",
+      emoji: "🍣",
+    },
+  ]);
+  const [moneyProviders, setMoneyProviders] = useState<MoneyProviderSum[]>([
+    {
+      id: "1",
+      name: "PayPay",
+      balance: 1000,
+    },
+  ]);
   useEffect(() => {
-    if (inputEl.current) {
-      console.log("focus");
-      inputEl.current.focus();
-    }
-  }, [isAddMode]);
+    const getMoneyPools = async () => {
+      if (session && session?.user) {
+        const res = await fetch(
+          `/api/back/moneypools?type=summary&user_id=${session.user.sub}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${session.user.idToken}`,
+            },
+          }
+        );
+        if (res.ok) {
+          const mps: MoneyPoolSum[] = await res.json();
+          setMoneyPoolSums(mps);
+        }
+      }
+    };
+
+    const getMoneyProviders = async () => {
+      if (session && session?.user) {
+        const res = await fetch(
+          `/api/back/moneyproviders?type=summary&user_id=${session.user.sub}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${session.user.idToken}`,
+            },
+          }
+        );
+        if (res.ok) {
+          const mps: MoneyProviderSum[] = await res.json();
+          setMoneyProviders(mps);
+        }
+      }
+    };
+
+    getMoneyPools();
+    getMoneyProviders();
+  }, [session]);
 
   if (session && session.user) {
     return (
@@ -112,9 +111,9 @@ function MypageContents() {
                 <div className="font-light text-3xl t-0 l-0">総残高</div>
                 <div className="flex gap-4 w-fit r-0">
                   <p>
-                    {moneyPools
+                    {moneyPoolSums
                       .reduce(function (sum, moneypool) {
-                        return sum + moneypool.amount;
+                        return sum + moneypool.Sum;
                       }, 0)
                       .toLocaleString(undefined, {
                         maximumFractionDigits: 5,
@@ -125,9 +124,9 @@ function MypageContents() {
               </div>
               <div className="h-4/12 flex items-center justify-center pt-4 pl-3 b-0">
                 <a
-                  href={`https://twitter.com/intent/tweet?text=%E7%A7%81%E3%81%AE%E6%AE%8B%E9%AB%98%E3%81%AF${moneyPools
+                  href={`https://twitter.com/intent/tweet?text=%E7%A7%81%E3%81%AE%E6%AE%8B%E9%AB%98%E3%81%AF${moneyPoolSums
                     .reduce(function (sum, moneypool) {
-                      return sum + moneypool.amount;
+                      return sum + moneypool.Sum;
                     }, 0)
                     .toLocaleString(undefined, {
                       maximumFractionDigits: 5,
@@ -148,19 +147,29 @@ function MypageContents() {
               </div>
             </div>
             <div className="h-5/6">
-              <Balance user={session.user} moneypools={moneyPools} />
+              <Balance
+                user={session.user}
+                moneypoolSums={moneyPoolSums}
+                moneyProviders={moneyProviders}
+              />
             </div>
           </div>
 
           <div className="col-span-1 w-8/12">
             <div className="h-10 flex items-center ml-6 gap-x-1">
-              {moneyPools.map((moneyPool, index) => (
+              {moneyPoolSums.map((moneyPool, index) => (
                 <div
                   key={moneyPool.id}
                   className="flex border-0 rounded-t-2xl h-full justify-center px-2 font-bold font-Noto items-center min-w-max w-20 border-b-0 cursor-pointer"
                   style={
                     moneyPoolIndex === index
-                      ? { backgroundColor: moneyPool.color, color: "#ffffff" }
+                      ? {
+                          backgroundColor:
+                            moneyPoolColors[
+                              moneyPoolIndex % moneyPoolColors.length
+                            ],
+                          color: "#ffffff",
+                        }
                       : {
                           backgroundColor: "#f4f4f4",
                         }
@@ -179,7 +188,10 @@ function MypageContents() {
               className={
                 "border-2 rounded-3xl p-1 h-[calc(100%-2rem)] overflow-hidden w-full"
               }
-              style={{ borderColor: moneyPools[moneyPoolIndex].color }}
+              style={{
+                borderColor:
+                  moneyPoolColors[moneyPoolIndex % moneyPoolColors.length],
+              }}
             >
               <Swiper
                 spaceBetween={1}
@@ -192,11 +204,11 @@ function MypageContents() {
                 initialSlide={0}
                 className="flex w-full h-[calc(100%-4rem)]"
               >
-                {moneyPools.map((moneyPool, index) => (
+                {moneyPoolSums.map((moneyPool, index) => (
                   <SwiperSlide key={moneyPool.id} className="">
                     <div className="border-2 border-transparent h-full mx-2">
                       <TransactionTable
-                        transactions={moneyPool.transactions}
+                        moneyPoolID={moneyPool.id}
                         scroll={index === moneyPoolIndex}
                       />
                     </div>
@@ -204,99 +216,12 @@ function MypageContents() {
                 ))}
               </Swiper>
               <div className="flex justify-center items-center h-16 w-full">
-                <div
-                  className="w-[95%] h-12 cursor-pointer"
-                  onClick={() => {
-                    setIsAddMode(true);
-                  }}
-                  onBlur={(fe) => {
-                    if (!fe.currentTarget.contains(fe.relatedTarget)) {
-                      setIsAddMode(false);
-                    }
-                  }}
-                  tabIndex={0}
-                >
-                  {isAddMode ? (
-                    <div
-                      className={`flex h-12 items-center gap-2 w-full border-2 border-gray-200 hover:border-primary-default rounded-full shadow-md px-2 font-Noto`}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.borderColor = "transparent";
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.borderColor =
-                          moneyPools[moneyPoolIndex].color;
-                      }}
-                    >
-                      <button
-                        className="h-5/6"
-                        style={{ color: moneyPools[moneyPoolIndex].color }}
-                        tabIndex={0}
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          await addTransaction();
-                        }}
-                      >
-                        <Plus className="h-full w-full" />
-                      </button>
-                      <div className="w-11/12 flex gap-2 justify-start items-center p-1">
-                        <input
-                          type="date"
-                          ref={inputEl}
-                          className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                            }
-                          }}
-                          placeholder="日付"
-                        />
-                        <input
-                          className="h-[80%] hover:border-0 focus:outline-none w-[75%]"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                            }
-                          }}
-                          placeholder="タイトル"
-                        />
-                        <input
-                          className="h-[80%] hover:border-0 focus:outline-none w-[10%]"
-                          onKeyDown={async (e) => {
-                            if (e.key === "Enter") {
-                              if (e.currentTarget) {
-                                e.currentTarget.blur();
-                              }
-                              e.preventDefault();
-                              await addTransaction();
-                            }
-                          }}
-                          placeholder="金額"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="flex h-12 items-center gap-2 w-full border-2 border-transparent hover:bg-gray-50 hover:border-primary-default rounded-full hover:shadow-md px-2 font-Noto"
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.borderColor = "transparent";
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.borderColor =
-                          moneyPools[moneyPoolIndex].color;
-                      }}
-                    >
-                      <div className="h-5/6  border-primary-default aspect-square">
-                        <div
-                          className="h-full w-full"
-                          style={{ color: moneyPools[moneyPoolIndex].color }}
-                        >
-                          <Plus className="h-full w-full" />
-                        </div>
-                      </div>
-                      追加
-                    </div>
-                  )}
-                </div>
+                <AddButton
+                  color={
+                    moneyPoolColors[moneyPoolIndex % moneyPoolColors.length]
+                  }
+                  moneyPoolID={moneyPoolSums[moneyPoolIndex].id}
+                />
               </div>
             </div>
           </div>
