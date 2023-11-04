@@ -49,7 +49,7 @@ function MypageContents() {
       id: "1",
       name: "食費",
       Sum: 1000,
-      Type: "public",
+      type: "public",
       emoji: "🍣",
     },
   ]);
