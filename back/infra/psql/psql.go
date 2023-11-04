@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -62,29 +63,37 @@ func dbInit() error {
 func NewDB() (*sqlx.DB, error) {
 	err := dbInit()
 	if err != nil {
+		log.Printf("DB初期化に失敗しました: %v", err)
 		return nil, fmt.Errorf("failed to init db: %w", err)
 	}
 
 	db, err := sqlx.Open("postgres", fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=%v", config.Config.PostgresHost, config.Config.PostgresPort, config.Config.PostgresUser, config.Config.PostgresPassword, config.Config.PostgresDb, sslmode))
 	if err != nil {
+		log.Printf("DB接続に失敗しました: %v", err)
 		return nil, fmt.Errorf("failed to open db: %w", err)
 	}
+
+	log.Println("DB接続に成功しました。")
 
 	// SQLファイルからテーブルを作成
 	err = executeSQLFile(db, "/app/infra/psql/init.sql")
 	if err != nil {
+		log.Printf("SQLファイルの実行に失敗しました: %v", err)
 		return nil, err
 	}
 
+	log.Println("SQLファイルが正常に実行されました。")
 	return db, nil
 }
 
 func executeSQLFile(db *sqlx.DB, filepath string) error {
 	file, err := os.Open(filepath)
 	if err != nil {
+		log.Printf("SQLファイルのオープンに失敗しました: %v", err)
 		return fmt.Errorf("failed to open SQL file: %w", err)
 	}
 	defer file.Close()
+	log.Printf("SQLファイル %s をオープンしました。", filepath)
 
 	scanner := bufio.NewScanner(file)
 	var sqlStatement string
@@ -94,36 +103,36 @@ func executeSQLFile(db *sqlx.DB, filepath string) error {
 		line := scanner.Text()
 		trimmedLine := strings.TrimSpace(line)
 
-		// コメントを無視
 		if strings.HasPrefix(trimmedLine, "--") {
 			continue
 		}
 
-		// DOブロックの開始を検出
-		if strings.HasPrefix(trimmedLine, "DO") {
+		if strings.HasPrefix(trimmedLine, "DO $$") {
 			inDOBlock = true
 		}
 
-		// DOブロック内では、END; まで読み込む
-		if inDOBlock && strings.HasPrefix(trimmedLine, "END;") {
+		if inDOBlock && strings.HasPrefix(trimmedLine, "END$$;") {
 			inDOBlock = false
 		}
 
-		sqlStatement += line + "\n" // SQLステートメントを行ごとに追加
+		sqlStatement += line + "\n"
 
-		// SQLステートメントが終わったかどうか（セミコロンかDOブロックの終わり）
-		if (!inDOBlock && strings.HasSuffix(trimmedLine, ";")) || (!inDOBlock && strings.HasPrefix(trimmedLine, "END;")) {
+		if (!inDOBlock && strings.HasSuffix(trimmedLine, ";")) || (inDOBlock && strings.HasPrefix(trimmedLine, "END$$;")) {
+			log.Printf("SQLステートメント %s を実行します", sqlStatement)
 			_, err = db.Exec(sqlStatement)
 			if err != nil {
+				log.Printf("SQLステートメントの実行に失敗しました: %v", err)
 				return fmt.Errorf("failed to exec SQL statement: %w", err)
 			}
-			sqlStatement = "" // ステートメントをリセット
+			sqlStatement = ""
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
+		log.Printf("SQLファイルの読み込み中にエラーが発生しました: %v", err)
 		return fmt.Errorf("error while reading SQL file: %w", err)
 	}
 
+	log.Println("SQLファイルが正常に実行されました。")
 	return nil
 }

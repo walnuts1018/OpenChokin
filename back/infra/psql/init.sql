@@ -104,14 +104,9 @@ CREATE TABLE IF NOT EXISTS restricted_publication_scope (
     FOREIGN KEY (group_id) REFERENCES user_groups(id)
 );
 
--- 制約：限定公開範囲のプールIDに対応するマネープールの公開タイプは限定公開である
-ALTER TABLE restricted_publication_scope 
-ADD CONSTRAINT fk_money_pool_restricted
-CHECK ((SELECT type FROM money_pool WHERE id = pool_id) = 'restricted');
-
 -- 初期データ追加
 -- usersテーブルにデータを挿入
-INSERT INTO users (id) VALUES (DEFAULT), (DEFAULT), (DEFAULT);
+INSERT INTO users (id) VALUES (1), (2), (3);
 
 -- user_groupsテーブルにデータを挿入
 INSERT INTO user_groups (name, creator_id) VALUES
