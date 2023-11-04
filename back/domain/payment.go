@@ -27,7 +27,7 @@ func (d *dbImpl) GetPayment(id string) (Payment, error) {
 // GetPaymentsByMoneyPoolID retrieves all payments associated with a specific money pool.
 func (d *dbImpl) GetPaymentsByMoneyPoolID(moneyPoolID string) ([]Payment, error) {
 	var payments []Payment
-	query := `SELECT id, money_pool_id, date, title, amount, description, is_planned, store_id FROM payment WHERE money_pool_id = $1`
+	query := `SELECT id, money_pool_id, date, title, amount, description, is_planned, store_id FROM payment WHERE money_pool_id = $1 ORDER BY date DESC`
 	err := d.db.Select(&payments, query, moneyPoolID)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching payments: %v", err)

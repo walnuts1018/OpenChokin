@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/walnuts1018/openchokin/back/config"
 	"github.com/walnuts1018/openchokin/back/usecase"
 )
 
@@ -12,9 +13,19 @@ var (
 	uc *usecase.Usecase
 )
 
+func UserMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Set("userID", "1")
+		c.Next()
+	}
+}
 func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 	uc = usecase
 	r := gin.Default()
+	if config.Config.ISDebugMode == "true" {
+		r.Use(UserMiddleware())
+	}
+
 	v1 := r.Group("/v1")
 	{
 		// クエリパラメータtype=summary or detailでサマリーと詳細を分けられる。

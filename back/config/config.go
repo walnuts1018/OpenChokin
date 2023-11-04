@@ -19,6 +19,8 @@ type Config_t struct {
 	PostgresHost          string `env:"POSTGRES_HOST"`
 	PostgresPort          string `env:"POSTGRES_PORT"`
 
+	ISDebugMode string `env:"IS_DEBUG_MODE"`
+
 	ServerPort string
 }
 
