@@ -1,5 +1,5 @@
 export type MoneyPool = {
-  id: number;
+  id: string;
   name: string;
   description: string;
   is_world_public: boolean;
@@ -22,19 +22,19 @@ export type MoneyPoolSum = {
   id: string;
   name: string;
   Sum: number;
-  Type: "private" | "public" | "restricted";
+  type: "private" | "public" | "restricted";
   emoji: string;
 };
 
 export type MoneyTransaction = {
-  id: number;
+  id: string;
   date: Date;
   title: string;
   amount: number;
 };
 
-export type MoneyProvider = {
-  id: number;
+export type MoneyProviderSum = {
+  id: string;
   name: string;
   balance: number;
 };

@@ -1,4 +1,4 @@
-import { MoneyPoolSum, MoneyPool, MoneyProvider } from "./type";
+import { MoneyPoolSum, MoneyPool, MoneyProviderSum } from "./type";
 import { Swiper, SwiperSlide, SwiperClass } from "swiper/react";
 import { useState } from "react";
 import Checkbox from "@mui/material/Checkbox";
@@ -7,6 +7,7 @@ import Modal from "react-modal";
 import { Plus } from "react-feather";
 import { useRef } from "react";
 import { useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 const tabColors = ["#f5c33f", "#31aedd"];
 const theme1 = createTheme({
@@ -47,7 +48,7 @@ export function Balance({
     image?: string | null | undefined;
   };
   moneypoolSums: MoneyPoolSum[];
-  moneyProviders: MoneyProvider[];
+  moneyProviders: MoneyProviderSum[];
 }) {
   const [swiper, setSwiper] = useState<SwiperClass>();
   const [swiperIndex, setSwiperIndex] = useState(0);
@@ -90,7 +91,7 @@ export function Balance({
             const swiperInstance = swiper;
             setSwiper(swiperInstance);
           }}
-          className="flex w-full h-full"
+          className="flex w-full h-[90%]"
         >
           <SwiperSlide className="">
             <ThemeProvider theme={theme1}>
@@ -98,91 +99,6 @@ export function Balance({
                 {moneypoolSums.map((moneyPool, index) => (
                   <BalanceItem key={moneyPool.id} moneyPool={moneyPool} />
                 ))}
-                <div className="flex justify-center items-center h-16 w-full">
-                  <div
-                    className="w-[95%] h-12 cursor-pointer"
-                    onClick={() => {
-                      setIsAddMode(true);
-                    }}
-                    onBlur={(fe) => {
-                      if (!fe.currentTarget.contains(fe.relatedTarget)) {
-                        setIsAddMode(false);
-                      }
-                    }}
-                    tabIndex={0}
-                  >
-                    {isAddMode ? (
-                      <div
-                        className={`flex h-12 items-center gap-2 w-full border-2 border-gray-200 hover:border-primary-default rounded-full shadow-md px-2 font-Noto`}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.borderColor = "transparent";
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.borderColor = tabColors[0];
-                        }}
-                      >
-                        <button
-                          className="h-5/6"
-                          style={{ color: tabColors[0] }}
-                          tabIndex={0}
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            await addMoneyPool();
-                          }}
-                        >
-                          <Plus className="h-full w-full" />
-                        </button>
-                        <div className="w-11/12 flex gap-2 justify-start items-center p-1">
-                          <input
-                            type="text"
-                            ref={inputEl}
-                            className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                              }
-                            }}
-                            placeholder="絵文字"
-                          />
-                          <input
-                            type="text"
-                            className="h-[80%] hover:border-0 focus:outline-none w-[75%]"
-                            onKeyDown={async (e) => {
-                              if (e.key === "Enter") {
-                                if (e.currentTarget) {
-                                  e.currentTarget.blur();
-                                }
-                                e.preventDefault();
-                                await addMoneyPool();
-                              }
-                            }}
-                            placeholder="名前"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        className="flex h-12 items-center gap-2 w-full border-2 border-transparent hover:bg-gray-50 hover:border-primary-default rounded-full hover:shadow-md px-2 font-Noto"
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.borderColor = "transparent";
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.borderColor = tabColors[0];
-                        }}
-                      >
-                        <div className="h-5/6  border-primary-default aspect-square">
-                          <div
-                            className="h-full w-full"
-                            style={{ color: tabColors[0] }}
-                          >
-                            <Plus className="h-full w-full" />
-                          </div>
-                        </div>
-                        追加
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
             </ThemeProvider>
           </SwiperSlide>
@@ -196,100 +112,184 @@ export function Balance({
                       MoneyProvider={MoneyProvider}
                     />
                   ))}
-                  <div className="flex justify-center items-center h-16 w-full">
-                    <div
-                      className="w-[95%] h-12 cursor-pointer"
-                      onClick={() => {
-                        setIsAddMode2(true);
-                      }}
-                      onBlur={(fe) => {
-                        console.log(fe.relatedTarget);
-                        console.log(
-                          fe.currentTarget.contains(fe.relatedTarget)
-                        );
-                        if (!fe.currentTarget.contains(fe.relatedTarget)) {
-                          setIsAddMode2(false);
-                        }
-                      }}
-                      tabIndex={0}
-                    >
-                      {isAddMode2 ? (
-                        <div
-                          className={`flex h-12 items-center gap-2 w-full border-2 border-gray-200 hover:border-primary-default rounded-full shadow-md px-2 font-Noto`}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.borderColor = "transparent";
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.borderColor = tabColors[0];
-                          }}
-                        >
-                          <button
-                            className="h-5/6"
-                            style={{ color: tabColors[0] }}
-                            tabIndex={0}
-                            onClick={async (e) => {
-                              e.preventDefault();
-                              await addMoneyPool();
-                            }}
-                          >
-                            <Plus className="h-full w-full" />
-                          </button>
-                          <div className="w-11/12 flex gap-2 justify-start items-center p-1">
-                            <input
-                              type="text"
-                              ref={inputEl}
-                              className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault();
-                                }
-                              }}
-                              placeholder="名前"
-                            />
-                            <input
-                              type="text"
-                              className="h-[80%] hover:border-0 focus:outline-none w-[40%]"
-                              onKeyDown={async (e) => {
-                                if (e.key === "Enter") {
-                                  if (e.currentTarget) {
-                                    e.currentTarget.blur();
-                                  }
-                                  e.preventDefault();
-                                  await addMoneyPool();
-                                }
-                              }}
-                              placeholder="残高"
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <div
-                          className="flex h-12 items-center gap-2 w-full border-2 border-transparent hover:bg-gray-50 hover:border-primary-default rounded-full hover:shadow-md px-2 font-Noto"
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.borderColor = "transparent";
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.borderColor = tabColors[0];
-                          }}
-                        >
-                          <div className="h-5/6  border-primary-default aspect-square">
-                            <div
-                              className="h-full w-full"
-                              style={{ color: tabColors[0] }}
-                            >
-                              <Plus className="h-full w-full" />
-                            </div>
-                          </div>
-                          追加
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
             </ThemeProvider>
           </SwiperSlide>
         </Swiper>
+        <div className="flex justify-center items-center h-16 w-full ">
+          {swiperIndex === 0 ? (
+            <div
+              className="w-[95%] h-12 cursor-pointer z-50"
+              onClick={() => {
+                setIsAddMode(true);
+              }}
+              onBlur={(fe) => {
+                if (!fe.currentTarget.contains(fe.relatedTarget)) {
+                  setIsAddMode(false);
+                }
+              }}
+              tabIndex={0}
+            >
+              {isAddMode ? (
+                <div
+                  className={`flex h-12 items-center gap-2 w-full border-2 border-gray-200 hover:border-primary-default rounded-full shadow-md px-2 font-Noto`}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.borderColor = "transparent";
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.borderColor = tabColors[0];
+                  }}
+                >
+                  <button
+                    className="h-5/6"
+                    style={{ color: tabColors[0] }}
+                    tabIndex={0}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      await addMoneyPool();
+                    }}
+                  >
+                    <Plus className="h-full w-full" />
+                  </button>
+                  <div className="w-11/12 flex gap-2 justify-start items-center p-1">
+                    <input
+                      type="text"
+                      ref={inputEl}
+                      className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                        }
+                      }}
+                      placeholder="絵文字"
+                    />
+                    <input
+                      type="text"
+                      className="h-[80%] hover:border-0 focus:outline-none w-[75%]"
+                      onKeyDown={async (e) => {
+                        if (e.key === "Enter") {
+                          if (e.currentTarget) {
+                            e.currentTarget.blur();
+                          }
+                          e.preventDefault();
+                          await addMoneyPool();
+                        }
+                      }}
+                      placeholder="名前"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="flex h-12 items-center gap-2 w-full border-2 border-transparent hover:bg-gray-50 hover:border-primary-default rounded-full hover:shadow-md px-2 font-Noto"
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.borderColor = "transparent";
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.borderColor = tabColors[0];
+                  }}
+                >
+                  <div className="h-5/6  border-primary-default aspect-square">
+                    <div
+                      className="h-full w-full"
+                      style={{ color: tabColors[0] }}
+                    >
+                      <Plus className="h-full w-full" />
+                    </div>
+                  </div>
+                  追加
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              className="w-[95%] h-12 cursor-pointer"
+              onClick={() => {
+                setIsAddMode2(true);
+              }}
+              onBlur={(fe) => {
+                console.log(fe.relatedTarget);
+                console.log(fe.currentTarget.contains(fe.relatedTarget));
+                if (!fe.currentTarget.contains(fe.relatedTarget)) {
+                  setIsAddMode2(false);
+                }
+              }}
+              tabIndex={0}
+            >
+              {isAddMode2 ? (
+                <div
+                  className={`flex h-12 items-center gap-2 w-full border-2 border-gray-200 hover:border-primary-default rounded-full shadow-md px-2 font-Noto`}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.borderColor = "transparent";
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.borderColor = tabColors[0];
+                  }}
+                >
+                  <button
+                    className="h-5/6"
+                    style={{ color: tabColors[0] }}
+                    tabIndex={0}
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      await addMoneyPool();
+                    }}
+                  >
+                    <Plus className="h-full w-full" />
+                  </button>
+                  <div className="w-11/12 flex gap-2 justify-start items-center p-1">
+                    <input
+                      type="text"
+                      ref={inputEl}
+                      className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                        }
+                      }}
+                      placeholder="名前"
+                    />
+                    <input
+                      type="text"
+                      className="h-[80%] hover:border-0 focus:outline-none w-[40%]"
+                      onKeyDown={async (e) => {
+                        if (e.key === "Enter") {
+                          if (e.currentTarget) {
+                            e.currentTarget.blur();
+                          }
+                          e.preventDefault();
+                          await addMoneyPool();
+                        }
+                      }}
+                      placeholder="残高"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className="flex h-12 items-center gap-2 w-full border-2 border-transparent hover:bg-gray-50 hover:border-primary-default rounded-full hover:shadow-md px-2 font-Noto"
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.borderColor = "transparent";
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.borderColor = tabColors[0];
+                  }}
+                >
+                  <div className="h-5/6  border-primary-default aspect-square">
+                    <div
+                      className="h-full w-full"
+                      style={{ color: tabColors[0] }}
+                    >
+                      <Plus className="h-full w-full" />
+                    </div>
+                  </div>
+                  追加
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -330,7 +330,8 @@ function SwiperTabs({
 }
 
 function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
-  const [isPublic, setIsPublic] = useState(moneyPool.is_world_public);
+  const { data: session } = useSession();
+  const [isPublic, setIsPublic] = useState(moneyPool.type === "public");
   const [changePublicCheckIsOpen, setChangePublicCheckIsOpen] = useState(false);
   const [isEditEmoji, setIsEditEmoji] = useState(false);
   const [isEditName, setIsEditName] = useState(false);
@@ -338,6 +339,74 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
 
   const [moneyPoolName, setMoneyPoolName] = useState(moneyPool.name);
   const [moneyPoolEmoji, setMoneyPoolEmoji] = useState(moneyPool.emoji);
+  const [moneyPoolType, setMoneyPoolType] = useState(moneyPool.type);
+
+  async function onEmojiChange(newValue: string) {
+    if (session && session.user) {
+      const res = await fetch(`/api/back/moneypools//${moneyPool.id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session.user.idToken}`,
+        },
+        body: JSON.stringify({
+          emoji: newValue,
+          name: moneyPoolName,
+          description: "",
+          type: moneyPoolType,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log(data);
+      }
+    }
+    setMoneyPoolEmoji(newValue);
+  }
+
+  async function onNameChange(newValue: string) {
+    if (session && session.user) {
+      const res = await fetch(`/api/back/moneypools/${moneyPool.id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session.user.idToken}`,
+        },
+        body: JSON.stringify({
+          emoji: moneyPoolEmoji,
+          name: newValue,
+          description: "",
+          type: moneyPoolType,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log(data);
+      }
+    }
+    setMoneyPoolName(newValue);
+  }
+
+  async function onPublicChange(newValue: boolean) {
+    const type = newValue ? "public" : "private";
+    if (session && session.user) {
+      const res = await fetch(`/api/back/moneypools/${moneyPool.id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session.user.idToken}`,
+        },
+        body: JSON.stringify({
+          emoji: moneyPoolEmoji,
+          name: moneyPoolName,
+          description: "",
+          type: type,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log(data);
+      }
+    }
+    setMoneyPoolType(type);
+  }
 
   return (
     <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-4 overflow-hidden border-b-2 border-gray-300">
@@ -350,14 +419,15 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
               className="w-full"
               defaultValue={moneyPoolEmoji}
               onBlur={(fe) => {
-                setMoneyPoolEmoji(fe.currentTarget.value);
+                onEmojiChange(fe.currentTarget.value);
                 if (!fe.currentTarget.contains(fe.relatedTarget)) {
                   setIsEditEmoji(false);
                 }
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  setMoneyPoolEmoji(e.currentTarget.value);
+                  onEmojiChange(e.currentTarget.value);
+                  setIsEditEmoji(false);
                   e.currentTarget.blur();
                 }
               }}
@@ -389,14 +459,14 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
                 className="w-full"
                 defaultValue={moneyPoolName}
                 onBlur={(fe) => {
-                  setMoneyPoolName(fe.currentTarget.value);
+                  onNameChange(fe.currentTarget.value);
                   if (!fe.currentTarget.contains(fe.relatedTarget)) {
                     setIsEditName(false);
                   }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    setMoneyPoolName(e.currentTarget.value);
+                    onNameChange(e.currentTarget.value);
                     e.currentTarget.blur();
                   }
                 }}
@@ -419,7 +489,7 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
           )}
         </div>
         <div className="w-1/2 text-right">
-          {moneyPool.amount.toLocaleString(undefined, {
+          {moneyPool.Sum.toLocaleString(undefined, {
             maximumFractionDigits: 5,
           })}
           円
@@ -433,6 +503,7 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
             if (isPublic == false) {
               setChangePublicCheckIsOpen(true);
             } else {
+              onPublicChange(false);
               setIsPublic((v) => {
                 return !v;
               });
@@ -458,7 +529,7 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
               className="bg-primary-default hover:bg-primary-dark rounded-full  text-white px-4 py-1 border-primary-default border-2 hover:border-primary-dark font-Noto font-semibold text-xl"
               onClick={() => {
                 setChangePublicCheckIsOpen(false);
-                // POST
+                onPublicChange(true);
                 setIsPublic((v) => {
                   return !v;
                 });
@@ -482,7 +553,7 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
 function MoneyProviderItems({
   MoneyProvider,
 }: {
-  MoneyProvider: MoneyProvider;
+  MoneyProvider: MoneyProviderSum;
 }) {
   const [isEditProviderName, setIsEditProviderName] = useState(false);
   const inputProviderName = useRef<HTMLInputElement>(null!);

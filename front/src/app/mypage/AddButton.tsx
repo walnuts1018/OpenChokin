@@ -1,9 +1,23 @@
 import { useState, useRef, useEffect } from "react";
 import { Plus } from "react-feather";
+import { useSession } from "next-auth/react";
 
-export function AddButton({ color }: { color: string }) {
+export function AddButton({
+  color,
+  moneyPoolID,
+}: {
+  color: string;
+  moneyPoolID: string;
+}) {
+  const { data: session } = useSession();
   const [isAddMode, setIsAddMode] = useState(false);
   const inputEl = useRef<HTMLInputElement>(null!);
+  const [transactionDate, setTransactionDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+  const [transactionTitle, setTransactionTitle] = useState("");
+  const [transactionAmount, setTransactionAmount] = useState(0);
+
   useEffect(() => {
     if (inputEl.current) {
       console.log("focus");
@@ -11,15 +25,25 @@ export function AddButton({ color }: { color: string }) {
     }
   }, [isAddMode]);
 
-  async function addTransaction(input: HTMLInputElement) {
-    const res = await fetch("/api/httptest", {
-      method: "POST",
-      body: JSON.stringify({
-        name: input.value,
-      }),
-    });
-    const data = await res.json();
-    console.log(data);
+  async function addTransaction() {
+    if (session && session.user) {
+      const res = await fetch(`/moneypools/${moneyPoolID}/payments`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.user.idToken}`,
+        },
+        body: JSON.stringify({
+          title: transactionTitle,
+          amount: transactionAmount,
+          description: "",
+          is_planned: false,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log(data);
+      }
+    }
   }
 
   return (
@@ -54,7 +78,7 @@ export function AddButton({ color }: { color: string }) {
             tabIndex={0}
             onClick={async (e) => {
               e.preventDefault();
-              await addTransaction(inputEl.current);
+              await addTransaction();
             }}
           >
             <Plus className="h-full w-full" />
@@ -69,8 +93,11 @@ export function AddButton({ color }: { color: string }) {
                   e.preventDefault();
                 }
               }}
-              value={new Date().toISOString().split("T")[0]}
+              value={transactionDate}
               placeholder="日付"
+              onChange={(e) => {
+                setTransactionDate(e.target.value);
+              }}
             />
             <input
               className="h-[80%] hover:border-0 focus:outline-none w-[75%]"
@@ -80,6 +107,10 @@ export function AddButton({ color }: { color: string }) {
                 }
               }}
               placeholder="タイトル"
+              value={transactionTitle}
+              onChange={(e) => {
+                setTransactionTitle(e.target.value);
+              }}
             />
             <input
               className="h-[80%] hover:border-0 focus:outline-none w-[10%]"
@@ -89,8 +120,12 @@ export function AddButton({ color }: { color: string }) {
                     e.currentTarget.blur();
                   }
                   e.preventDefault();
-                  await addTransaction(inputEl.current);
+                  await addTransaction();
                 }
+              }}
+              value={transactionAmount}
+              onChange={(e) => {
+                setTransactionAmount(Number(e.target.value));
               }}
               placeholder="金額"
             />

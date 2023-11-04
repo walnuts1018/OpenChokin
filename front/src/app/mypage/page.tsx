@@ -5,7 +5,7 @@ import { TransactionTable } from "./transactionTable";
 import { useState, useRef, useEffect, ReactElement } from "react";
 import { Swiper, SwiperSlide, SwiperClass } from "swiper/react";
 import { Balance } from "./Balance";
-import { MoneyPool, MoneyProvider } from "./type";
+import { MoneyPool, MoneyProviderSum } from "./type";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Image from "next/image";
 import { AddButton } from "./AddButton";
@@ -28,24 +28,6 @@ const moneyPoolColors = [
   "#CD853F",
 ];
 
-const MoneyProviders: MoneyProvider[] = [
-  {
-    id: 1,
-    name: "楽天銀行",
-    balance: 1000,
-  },
-  {
-    id: 2,
-    name: "現金",
-    balance: 2000,
-  },
-  {
-    id: 3,
-    name: "PayPay",
-    balance: 3000,
-  },
-];
-
 const theme = createTheme({
   palette: {
     primary: {
@@ -62,20 +44,62 @@ function MypageContents() {
   const { data: session } = useSession();
   const [moneyPoolIndex, setMoneyPoolIndex] = useState(0);
   const [swiper, setSwiper] = useState<SwiperClass>();
-  const [moneyPoolSums, setMoneyPoolSums] = useState<MoneyPoolSum[]>([]);
-
+  const [moneyPoolSums, setMoneyPoolSums] = useState<MoneyPoolSum[]>([
+    {
+      id: "1",
+      name: "食費",
+      Sum: 1000,
+      Type: "public",
+      emoji: "🍣",
+    },
+  ]);
+  const [moneyProviders, setMoneyProviders] = useState<MoneyProviderSum[]>([
+    {
+      id: "1",
+      name: "PayPay",
+      balance: 1000,
+    },
+  ]);
   useEffect(() => {
     const getMoneyPools = async () => {
-      const res = await fetch("/backend/v1/moneypools?type=summary", {
-        method: "GET",
-      });
-      if (res.ok) {
-        const mps: MoneyPoolSum[] = await res.json();
-        setMoneyPoolSums(mps);
+      if (session && session?.user) {
+        const res = await fetch(
+          `/api/back/moneypools?type=summary&user_id=${session.user.sub}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${session.user.idToken}`,
+            },
+          }
+        );
+        if (res.ok) {
+          const mps: MoneyPoolSum[] = await res.json();
+          setMoneyPoolSums(mps);
+        }
       }
     };
+
+    const getMoneyProviders = async () => {
+      if (session && session?.user) {
+        const res = await fetch(
+          `/api/back/moneyproviders?type=summary&user_id=${session.user.sub}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${session.user.idToken}`,
+            },
+          }
+        );
+        if (res.ok) {
+          const mps: MoneyProviderSum[] = await res.json();
+          setMoneyProviders(mps);
+        }
+      }
+    };
+
     getMoneyPools();
-  }, []);
+    getMoneyProviders();
+  }, [session]);
 
   if (session && session.user) {
     return (
@@ -126,7 +150,7 @@ function MypageContents() {
               <Balance
                 user={session.user}
                 moneypoolSums={moneyPoolSums}
-                moneyProviders={MoneyProviders}
+                moneyProviders={moneyProviders}
               />
             </div>
           </div>
@@ -196,6 +220,7 @@ function MypageContents() {
                   color={
                     moneyPoolColors[moneyPoolIndex % moneyPoolColors.length]
                   }
+                  moneyPoolID={moneyPoolSums[moneyPoolIndex].id}
                 />
               </div>
             </div>

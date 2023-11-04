@@ -6,9 +6,10 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { useLayoutEffect, useRef } from "react";
-import { MoneyTransaction } from "./type";
+import { MoneyPoolResponse, MoneyTransaction } from "./type";
 import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
   border: 0,
@@ -30,19 +31,22 @@ export function TransactionTable({
 }) {
   const [transactions, setTransactions] = useState<MoneyTransaction[]>([]);
   const scrollBottomRef = useRef<HTMLTableRowElement>(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const getMoneyPools = async () => {
-      const res = await fetch("/backend/v1/moneypools?type=summary", {
-        method: "GET",
-      });
-      if (res.ok) {
-        const mps: MoneyPoolSum[] = await res.json();
-        setMoneyPoolSums(mps);
+      if (session && session?.user) {
+        const res = await fetch(`/backend/v1/moneypools/${moneyPoolID}`, {
+          method: "GET",
+        });
+        if (res.ok) {
+          const mpr: MoneyPoolResponse = await res.json();
+          setTransactions(mpr.Payments);
+        }
       }
     };
     getMoneyPools();
-  }, []);
+  }, [session, moneyPoolID]);
 
   useLayoutEffect(() => {
     if (scroll) {
