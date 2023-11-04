@@ -343,7 +343,7 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
 
   async function onEmojiChange(newValue: string) {
     if (session && session.user) {
-      const res = await fetch(`/api/back/moneypools//${moneyPool.id}`, {
+      const res = await fetch(`/api/back/moneypools/${moneyPool.id}`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${session.user.idToken}`,
@@ -555,6 +555,7 @@ function MoneyProviderItems({
 }: {
   MoneyProvider: MoneyProviderSum;
 }) {
+  const { data: session } = useSession();
   const [isEditProviderName, setIsEditProviderName] = useState(false);
   const inputProviderName = useRef<HTMLInputElement>(null!);
   const [providerName, setProviderName] = useState(MoneyProvider.name);
@@ -562,6 +563,54 @@ function MoneyProviderItems({
   const [isEditBalance, setIsEditBalance] = useState(false);
   const inputBalance = useRef<HTMLInputElement>(null!);
   const [providerBalance, setProviderBalance] = useState(MoneyProvider.balance);
+
+  const [moneyProviderName, setMoneyProviderName] = useState(
+    MoneyProvider.name
+  );
+
+  const [moneyProviderBalance, setMoneyProviderBalance] = useState(
+    MoneyProvider.balance
+  );
+
+  async function onNameChanged(newValue: string) {
+    if (session && session.user) {
+      const res = await fetch(`/api/back/moneyproviders/${MoneyProvider.id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session.user.idToken}`,
+        },
+        body: JSON.stringify({
+          name: newValue,
+          balance: moneyProviderBalance,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log(data);
+      }
+    }
+    setMoneyProviderName(newValue);
+  }
+
+  async function onBalanceChanged(newValue: number) {
+    if (session && session.user) {
+      const res = await fetch(`/api/back/moneyproviders/${MoneyProvider.id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session.user.idToken}`,
+        },
+        body: JSON.stringify({
+          name: moneyProviderName,
+          balance: newValue,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        console.log(data);
+      }
+    }
+    setMoneyProviderBalance(newValue);
+  }
 
   return (
     <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-4 overflow-hidden border-b-2 border-gray-300">
@@ -574,17 +623,21 @@ function MoneyProviderItems({
                 type="text"
                 className="w-full"
                 defaultValue={providerName}
+                value={providerName}
                 onBlur={(fe) => {
-                  setProviderName(fe.currentTarget.value);
+                  onNameChanged(fe.currentTarget.value);
                   if (!fe.currentTarget.contains(fe.relatedTarget)) {
                     setIsEditProviderName(false);
                   }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    setProviderName(e.currentTarget.value);
+                    onNameChanged(e.currentTarget.value);
                     e.currentTarget.blur();
                   }
+                }}
+                onChange={(e) => {
+                  setProviderName(e.currentTarget.value);
                 }}
                 autoFocus
                 tabIndex={0}
@@ -612,17 +665,21 @@ function MoneyProviderItems({
                 type="text"
                 className="w-full"
                 defaultValue={providerBalance}
+                value={providerBalance}
                 onBlur={(fe) => {
-                  setProviderBalance(Number(fe.currentTarget.value));
+                  onBalanceChanged(Number(fe.currentTarget.value));
                   if (!fe.currentTarget.contains(fe.relatedTarget)) {
                     setIsEditBalance(false);
                   }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    setProviderBalance(Number(e.currentTarget.value));
+                    onBalanceChanged(Number(e.currentTarget.value));
                     e.currentTarget.blur();
                   }
+                }}
+                onChange={(e) => {
+                  setProviderBalance(Number(e.currentTarget.value));
                 }}
                 autoFocus
                 tabIndex={0}
