@@ -73,8 +73,11 @@ function MypageContents() {
           }
         );
         if (res.ok) {
-          const mps: MoneyPoolSum[] = await res.json();
-          setMoneyPoolSums(mps);
+          const json = await res.json();
+          if (json.Pools !== null) {
+            const mps: MoneyPoolSum[] = json.Pools;
+            setMoneyPoolSums(mps);
+          }
         }
       }
     };
