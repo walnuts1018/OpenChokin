@@ -485,6 +485,11 @@ function MoneyProviderItems({
   const [isEditProviderName, setIsEditProviderName] = useState(false);
   const inputProviderName = useRef<HTMLInputElement>(null!);
   const [providerName, setProviderName] = useState(MoneyProvider.name);
+
+  const [isEditBalance, setIsEditBalance] = useState(false);
+  const inputBalance = useRef<HTMLInputElement>(null!);
+  const [providerBalance, setProviderBalance] = useState(MoneyProvider.balance);
+
   return (
     <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-4 overflow-hidden border-b-2 border-gray-300">
       <div className="flex items-center justify-between w-full">
@@ -527,10 +532,45 @@ function MoneyProviderItems({
           )}
         </div>
         <div className="w-1/2 text-right">
-          {MoneyProvider.balance.toLocaleString(undefined, {
-            maximumFractionDigits: 5,
-          })}
-          円
+          {isEditBalance ? (
+            <div className="w-full h-full">
+              <input
+                ref={inputBalance}
+                type="text"
+                className="w-full"
+                defaultValue={providerBalance}
+                onBlur={(fe) => {
+                  setProviderBalance(Number(fe.currentTarget.value));
+                  if (!fe.currentTarget.contains(fe.relatedTarget)) {
+                    setIsEditBalance(false);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setProviderBalance(Number(e.currentTarget.value));
+                    e.currentTarget.blur();
+                  }
+                }}
+                autoFocus
+                tabIndex={0}
+              />
+            </div>
+          ) : (
+            <div
+              className="cursor-pointer h-full"
+              onClick={() => {
+                setIsEditBalance((v) => {
+                  return !v;
+                });
+              }}
+              tabIndex={0}
+            >
+              {providerBalance.toLocaleString(undefined, {
+                maximumFractionDigits: 5,
+              })}
+              円
+            </div>
+          )}
         </div>
       </div>
     </div>
