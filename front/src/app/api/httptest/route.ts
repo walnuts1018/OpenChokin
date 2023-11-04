@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 
-const endpoint = "https://httptest.walnuts.dev";
+const endpoint = "https://httpbin.org/get";
 export async function POST(request: NextRequest) {
   const result = await fetch(endpoint, {
     method: "POST",

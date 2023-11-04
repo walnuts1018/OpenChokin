@@ -10,6 +10,22 @@ export type MoneyPool = {
   transactions: MoneyTransaction[];
 };
 
+export type MoneyPoolResponse = {
+  id: string;
+  name: string;
+  description: string;
+  type: "private" | "public" | "restricted";
+  Payments: MoneyTransaction[];
+};
+
+export type MoneyPoolSum = {
+  id: string;
+  name: string;
+  Sum: number;
+  Type: "private" | "public" | "restricted";
+  emoji: string;
+};
+
 export type MoneyTransaction = {
   id: number;
   date: Date;

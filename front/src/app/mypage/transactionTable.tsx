@@ -8,6 +8,7 @@ import TableRow from "@mui/material/TableRow";
 import { useLayoutEffect, useRef } from "react";
 import { MoneyTransaction } from "./type";
 import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
+import { useState, useEffect } from "react";
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
   border: 0,
@@ -21,13 +22,27 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 export function TransactionTable({
-  transactions,
+  moneyPoolID,
   scroll,
 }: {
-  transactions: MoneyTransaction[];
+  moneyPoolID: string;
   scroll: boolean;
 }) {
+  const [transactions, setTransactions] = useState<MoneyTransaction[]>([]);
   const scrollBottomRef = useRef<HTMLTableRowElement>(null);
+
+  useEffect(() => {
+    const getMoneyPools = async () => {
+      const res = await fetch("/backend/v1/moneypools?type=summary", {
+        method: "GET",
+      });
+      if (res.ok) {
+        const mps: MoneyPoolSum[] = await res.json();
+        setMoneyPoolSums(mps);
+      }
+    };
+    getMoneyPools();
+  }, []);
 
   useLayoutEffect(() => {
     if (scroll) {

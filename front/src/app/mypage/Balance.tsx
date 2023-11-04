@@ -1,4 +1,4 @@
-import { MoneyPool, MoneyProvider } from "./type";
+import { MoneyPoolSum, MoneyPool, MoneyProvider } from "./type";
 import { Swiper, SwiperSlide, SwiperClass } from "swiper/react";
 import { useState } from "react";
 import Checkbox from "@mui/material/Checkbox";
@@ -6,6 +6,8 @@ import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
 import Modal from "react-modal";
 import { Plus } from "react-feather";
 import { useRef } from "react";
+import { useEffect } from "react";
+
 const tabColors = ["#f5c33f", "#31aedd"];
 const theme1 = createTheme({
   palette: {
@@ -34,7 +36,7 @@ const theme2 = createTheme({
 export function Balance({
   className,
   user,
-  moneypools,
+  moneypoolSums,
   moneyProviders,
 }: {
   children?: React.ReactNode;
@@ -44,7 +46,7 @@ export function Balance({
     email?: string | null | undefined;
     image?: string | null | undefined;
   };
-  moneypools: MoneyPool[];
+  moneypoolSums: MoneyPoolSum[];
   moneyProviders: MoneyProvider[];
 }) {
   const [swiper, setSwiper] = useState<SwiperClass>();
@@ -93,7 +95,7 @@ export function Balance({
           <SwiperSlide className="">
             <ThemeProvider theme={theme1}>
               <div className="border-2 border-transparent h-full mx-2 overflow-auto overflow-x-hidden">
-                {moneypools.map((moneyPool, index) => (
+                {moneypoolSums.map((moneyPool, index) => (
                   <BalanceItem key={moneyPool.id} moneyPool={moneyPool} />
                 ))}
                 <div className="flex justify-center items-center h-16 w-full">
@@ -327,7 +329,7 @@ function SwiperTabs({
   );
 }
 
-function BalanceItem({ moneyPool }: { moneyPool: MoneyPool }) {
+function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
   const [isPublic, setIsPublic] = useState(moneyPool.is_world_public);
   const [changePublicCheckIsOpen, setChangePublicCheckIsOpen] = useState(false);
   const [isEditEmoji, setIsEditEmoji] = useState(false);
