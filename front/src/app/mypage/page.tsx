@@ -4,11 +4,11 @@ import { NextAuthProvider } from "../providers";
 import { TransactionTable } from "./transactionTable";
 import { useState, useRef, useEffect } from "react";
 import { Swiper, SwiperSlide, SwiperClass } from "swiper/react";
-import { Plus } from "react-feather";
 import { Balance } from "./Balance";
 import { MoneyPool, MoneyProvider } from "./type";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Image from "next/image";
+import { AddButton } from "./AddButton";
 
 export default function Mypage() {
   return (
@@ -68,17 +68,17 @@ moneyPools.forEach((moneyPool) => {
 const MoneyProviders: MoneyProvider[] = [
   {
     id: 1,
-    name: "test",
+    name: "楽天銀行",
     balance: 1000,
   },
   {
     id: 2,
-    name: "test2",
+    name: "現金",
     balance: 2000,
   },
   {
     id: 3,
-    name: "test3",
+    name: "PayPay",
     balance: 3000,
   },
 ];
@@ -99,26 +99,17 @@ function MypageContents() {
   const { data: session } = useSession();
   const [moneyPoolIndex, setMoneyPoolIndex] = useState(0);
   const [swiper, setSwiper] = useState<SwiperClass>();
-  const [isAddMode, setIsAddMode] = useState(false);
-  const inputEl = useRef<HTMLInputElement>(null!);
 
-  async function addTransaction() {
+  async function addTransaction(input: HTMLInputElement) {
     const res = await fetch("/api/httptest", {
       method: "POST",
       body: JSON.stringify({
-        name: inputEl.current.value,
+        name: input.value,
       }),
     });
     const data = await res.json();
     console.log(data);
   }
-
-  useEffect(() => {
-    if (inputEl.current) {
-      console.log("focus");
-      inputEl.current.focus();
-    }
-  }, [isAddMode]);
 
   if (session && session.user) {
     return (
@@ -226,100 +217,10 @@ function MypageContents() {
                 ))}
               </Swiper>
               <div className="flex justify-center items-center h-16 w-full">
-                <div
-                  className="w-[95%] h-12 cursor-pointer"
-                  onClick={() => {
-                    setIsAddMode(true);
-                  }}
-                  onBlur={(fe) => {
-                    if (!fe.currentTarget.contains(fe.relatedTarget)) {
-                      setIsAddMode(false);
-                    }
-                  }}
-                  tabIndex={0}
-                >
-                  {isAddMode ? (
-                    <div
-                      className={`flex h-12 items-center gap-2 w-full border-2 border-gray-200 hover:border-primary-default rounded-full shadow-md px-2 font-Noto`}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.borderColor = "transparent";
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.borderColor =
-                          moneyPools[moneyPoolIndex].color;
-                      }}
-                    >
-                      <button
-                        className="h-5/6"
-                        style={{ color: moneyPools[moneyPoolIndex].color }}
-                        tabIndex={0}
-                        onClick={async (e) => {
-                          e.preventDefault();
-                          await addTransaction();
-                        }}
-                      >
-                        <Plus className="h-full w-full" />
-                      </button>
-                      <div className="w-11/12 flex gap-2 justify-start items-center p-1">
-                        <input
-                          type="date"
-                          ref={inputEl}
-                          className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                            }
-                          }}
-                          value={new Date().toISOString().split("T")[0]}
-                          placeholder="日付"
-                        />
-                        <input
-                          className="h-[80%] hover:border-0 focus:outline-none w-[75%]"
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                            }
-                          }}
-                          placeholder="タイトル"
-                        />
-                        <input
-                          className="h-[80%] hover:border-0 focus:outline-none w-[10%]"
-                          onKeyDown={async (e) => {
-                            if (e.key === "Enter") {
-                              if (e.currentTarget) {
-                                e.currentTarget.blur();
-                              }
-                              e.preventDefault();
-                              await addTransaction();
-                            }
-                          }}
-                          placeholder="金額"
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="flex h-12 items-center gap-2 w-full border-2 border-transparent hover:bg-gray-50 hover:border-primary-default rounded-full hover:shadow-md px-2 font-Noto"
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.borderColor = "transparent";
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.borderColor =
-                          moneyPools[moneyPoolIndex].color;
-                      }}
-                    >
-                      <div className="h-5/6  border-primary-default aspect-square">
-                        <div
-                          className="h-full w-full"
-                          style={{ color: moneyPools[moneyPoolIndex].color }}
-                        >
-                          <Plus className="h-full w-full" />
-                        </div>
-                      </div>
-                      追加
-                    </div>
-                  )}
-                </div>
+                <AddButton
+                  color={moneyPools[moneyPoolIndex].color}
+                  addFunction={addTransaction}
+                />
               </div>
             </div>
           </div>
