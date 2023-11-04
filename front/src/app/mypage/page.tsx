@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { Swiper, SwiperSlide, SwiperClass } from "swiper/react";
 import { Plus } from "react-feather";
 import { Balance } from "./Balance";
-import { MoneyPool } from "./type";
+import { MoneyPool, MoneyProvider } from "./type";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Image from "next/image";
 
@@ -64,6 +64,24 @@ moneyPools.forEach((moneyPool) => {
     });
   }
 });
+
+const MoneyProviders: MoneyProvider[] = [
+  {
+    id: 1,
+    name: "test",
+    balance: 1000,
+  },
+  {
+    id: 2,
+    name: "test2",
+    balance: 2000,
+  },
+  {
+    id: 3,
+    name: "test3",
+    balance: 3000,
+  },
+];
 
 const theme = createTheme({
   palette: {
@@ -148,7 +166,11 @@ function MypageContents() {
               </div>
             </div>
             <div className="h-5/6">
-              <Balance user={session.user} moneypools={moneyPools} />
+              <Balance
+                user={session.user}
+                moneypools={moneyPools}
+                moneyProviders={MoneyProviders}
+              />
             </div>
           </div>
 
@@ -248,6 +270,7 @@ function MypageContents() {
                               e.preventDefault();
                             }
                           }}
+                          value={new Date().toISOString().split("T")[0]}
                           placeholder="日付"
                         />
                         <input

@@ -1,4 +1,4 @@
-import { MoneyPool } from "./type";
+import { MoneyPool, MoneyProvider } from "./type";
 import { Swiper, SwiperSlide, SwiperClass } from "swiper/react";
 import { useState } from "react";
 import Checkbox from "@mui/material/Checkbox";
@@ -35,6 +35,7 @@ export function Balance({
   className,
   user,
   moneypools,
+  moneyProviders,
 }: {
   children?: React.ReactNode;
   className?: string;
@@ -44,6 +45,7 @@ export function Balance({
     image?: string | null | undefined;
   };
   moneypools: MoneyPool[];
+  moneyProviders: MoneyProvider[];
 }) {
   const [swiper, setSwiper] = useState<SwiperClass>();
   const [swiperIndex, setSwiperIndex] = useState(0);
@@ -93,35 +95,11 @@ export function Balance({
             <ThemeProvider theme={theme1}>
               <div className="border-2 border-transparent h-full mx-2 overflow-auto overflow-x-hidden">
                 {moneypools.map((moneyPool, index) => (
-                  <div
+                  <BalanceItem
                     key={moneyPool.id}
-                    className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-4 overflow-hidden border-b-2 border-gray-300"
-                  >
-                    <div className="w-10">{moneyPool.emoji}</div>
-                    <div className="flex items-center justify-between w-9/12">
-                      <div className="w-1/2">{moneyPool.name}</div>
-                      <div className="w-1/2 text-right">
-                        {moneyPool.amount.toLocaleString(undefined, {
-                          maximumFractionDigits: 5,
-                        })}
-                        円
-                      </div>
-                    </div>
-
-                    <div>
-                      <Checkbox
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setChangePublicCheckIsOpen(true);
-                            setForceReload((forceReload + 1) % 2);
-                          }
-                        }}
-                        value={moneyPool.is_world_public}
-                        className="w-10"
-                        sx={{ "& .MuiSvgIcon-root": { fontSize: 28 } }}
-                      />
-                    </div>
-                  </div>
+                    moneyPool={moneyPool}
+                    setChangePublicCheckIsOpen={setChangePublicCheckIsOpen}
+                  />
                 ))}
                 <div className="flex justify-center items-center h-16 w-full">
                   <div
@@ -239,7 +217,111 @@ export function Balance({
           </SwiperSlide>
           <SwiperSlide className="">
             <ThemeProvider theme={theme2}>
-              <div className="border-2 border-transparent h-full mx-2">add</div>
+              <div className="border-2 border-transparent h-full mx-2">
+                <div className="border-2 border-transparent h-full mx-2 overflow-auto overflow-x-hidden">
+                  {moneyProviders.map((MoneyProvider, index) => (
+                    <div
+                      key={MoneyProvider.id}
+                      className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-4 overflow-hidden border-b-2 border-gray-300"
+                    >
+                      <div className="flex items-center justify-between w-9/12">
+                        <div className="w-1/2">{MoneyProvider.name}</div>
+                        <div className="w-1/2 text-right">
+                          {MoneyProvider.balance.toLocaleString(undefined, {
+                            maximumFractionDigits: 5,
+                          })}
+                          円
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="flex justify-center items-center h-16 w-full">
+                    <div
+                      className="w-[95%] h-12 cursor-pointer"
+                      onClick={() => {
+                        setIsAddMode(true);
+                      }}
+                      onBlur={(fe) => {
+                        if (!fe.currentTarget.contains(fe.relatedTarget)) {
+                          setIsAddMode(false);
+                        }
+                      }}
+                      tabIndex={0}
+                    >
+                      {isAddMode ? (
+                        <div
+                          className={`flex h-12 items-center gap-2 w-full border-2 border-gray-200 hover:border-primary-default rounded-full shadow-md px-2 font-Noto`}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.borderColor = "transparent";
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.borderColor = tabColors[0];
+                          }}
+                        >
+                          <button
+                            className="h-5/6"
+                            style={{ color: tabColors[0] }}
+                            tabIndex={0}
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              await addMoneyPool();
+                            }}
+                          >
+                            <Plus className="h-full w-full" />
+                          </button>
+                          <div className="w-11/12 flex gap-2 justify-start items-center p-1">
+                            <input
+                              type="text"
+                              ref={inputEl}
+                              className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                }
+                              }}
+                              placeholder="名前"
+                            />
+                            <input
+                              type="text"
+                              className="h-[80%] hover:border-0 focus:outline-none w-[40%]"
+                              onKeyDown={async (e) => {
+                                if (e.key === "Enter") {
+                                  if (e.currentTarget) {
+                                    e.currentTarget.blur();
+                                  }
+                                  e.preventDefault();
+                                  await addMoneyPool();
+                                }
+                              }}
+                              placeholder="残高"
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className="flex h-12 items-center gap-2 w-full border-2 border-transparent hover:bg-gray-50 hover:border-primary-default rounded-full hover:shadow-md px-2 font-Noto"
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.borderColor = "transparent";
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.borderColor = tabColors[0];
+                          }}
+                        >
+                          <div className="h-5/6  border-primary-default aspect-square">
+                            <div
+                              className="h-full w-full"
+                              style={{ color: tabColors[0] }}
+                            >
+                              <Plus className="h-full w-full" />
+                            </div>
+                          </div>
+                          追加
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </ThemeProvider>
           </SwiperSlide>
         </Swiper>
@@ -278,6 +360,47 @@ function SwiperTabs({
       }}
     >
       <div>{title}</div>
+    </div>
+  );
+}
+
+function BalanceItem({
+  moneyPool,
+  setChangePublicCheckIsOpen,
+}: {
+  moneyPool: MoneyPool;
+  setChangePublicCheckIsOpen: (isOpen: boolean) => void;
+}) {
+  const [isPublic, setIsPublic] = useState(moneyPool.is_world_public);
+  return (
+    <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-4 overflow-hidden border-b-2 border-gray-300">
+      <div className="w-10">{moneyPool.emoji}</div>
+      <div className="flex items-center justify-between w-9/12">
+        <div className="w-1/2">{moneyPool.name}</div>
+        <div className="w-1/2 text-right">
+          {moneyPool.amount.toLocaleString(undefined, {
+            maximumFractionDigits: 5,
+          })}
+          円
+        </div>
+      </div>
+
+      <div>
+        <Checkbox
+          onClick={() => {
+            if (isPublic == false) {
+              setChangePublicCheckIsOpen(true);
+            }
+            // POST
+            setIsPublic((v) => {
+              return !v;
+            });
+          }}
+          checked={isPublic}
+          className="w-10"
+          sx={{ "& .MuiSvgIcon-root": { fontSize: 28 } }}
+        />
+      </div>
     </div>
   );
 }

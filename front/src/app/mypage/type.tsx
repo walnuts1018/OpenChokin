@@ -16,3 +16,9 @@ export type MoneyTransaction = {
   title: string;
   amount: number;
 };
+
+export type MoneyProvider = {
+  id: number;
+  name: string;
+  balance: number;
+};
