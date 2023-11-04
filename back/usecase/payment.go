@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/walnuts1018/openchokin/back/domain"
@@ -9,12 +10,15 @@ import (
 
 // AddNewPayment adds a new payment to the specified MoneyPool for a given user.
 func (u *Usecase) AddNewPayment(userID string, moneyPoolID string, title string, amount float64, description string, isPlanned bool) error {
+	log.Printf("ユーザーID %s のための新規支払い追加を開始します。マネープールID: %s, タイトル: %s", userID, moneyPoolID, title)
 	// Retrieve the MoneyPool to ensure it exists and belongs to the user
 	moneyPool, err := u.db.GetMoneyPool(moneyPoolID)
 	if err != nil {
+		log.Printf("マネープールID %s の取得に失敗しました。エラー: %v", moneyPoolID, err)
 		return err // MoneyPool retrieval failed
 	}
 	if moneyPool.OwnerID != userID {
+		log.Printf("エラー: ユーザーID %s はマネープールID %s の支払い追加に対して権限がありません。", userID, moneyPoolID)
 		return fmt.Errorf("error: user unauthorized")
 	}
 
@@ -32,7 +36,12 @@ func (u *Usecase) AddNewPayment(userID string, moneyPoolID string, title string,
 
 	// Persist the new payment
 	_, err = u.db.NewPayment(payment)
-	return err // Will be nil if the operation was successful
+	if err != nil {
+		log.Printf("新規支払いの保存に失敗しました。マネープールID: %s, タイトル: %s, エラー: %v", moneyPoolID, title, err)
+		return err
+	}
+	log.Printf("新規支払いを保存しました。マネープールID: %s, タイトル: %s", moneyPoolID, title)
+	return nil // Will be nil if the operation was successful
 }
 
 type DailyPaymentItem struct {
@@ -49,7 +58,9 @@ type MonthlyPaymentsResponse struct {
 	DailyPayments map[int]DailyPayments
 }
 
+// GetMonthlyPayments retrieves payments for a given user and month.
 func (u *Usecase) GetMonthlyPayments(userID string, month time.Time) (MonthlyPaymentsResponse, error) {
+	log.Printf("ユーザーID %s の月間支払い情報取得を開始します。対象月: %s", userID, month.Format("2006-01"))
 	response := MonthlyPaymentsResponse{
 		DailyPayments: make(map[int]DailyPayments),
 	}
@@ -61,12 +72,14 @@ func (u *Usecase) GetMonthlyPayments(userID string, month time.Time) (MonthlyPay
 
 	moneyPools, err := u.db.GetMoneyPoolsByUserID(userID)
 	if err != nil {
+		log.Printf("ユーザーID %s のマネープール取得に失敗しました。エラー: %v", userID, err)
 		return MonthlyPaymentsResponse{}, err
 	}
 
 	for _, pool := range moneyPools {
 		payments, err := u.db.GetPaymentsByMoneyPoolID(pool.ID)
 		if err != nil {
+			log.Printf("マネープールID %s の支払い情報取得に失敗しました。エラー: %v", pool.ID, err)
 			return MonthlyPaymentsResponse{}, err
 		}
 
@@ -83,14 +96,13 @@ func (u *Usecase) GetMonthlyPayments(userID string, month time.Time) (MonthlyPay
 				}
 
 				dailyPayments := response.DailyPayments[day]
-
 				dailyPayments.Payments = append(dailyPayments.Payments, item)
-
 				response.DailyPayments[day] = dailyPayments
 			}
 		}
 	}
 
+	log.Printf("ユーザーID %s の月間支払い情報を取得しました。対象月: %s", userID, month.Format("2006-01"))
 	return response, nil
 }
 
@@ -104,22 +116,28 @@ type PaymentResponse struct {
 	IsPlanned   bool
 }
 
+// UpdatePayment updates a payment's details.
 func (u *Usecase) UpdatePayment(userID string, moneyPoolID string, paymentID string, date time.Time, title string, amount float64, description string, isPlanned bool) (PaymentResponse, error) {
+	log.Printf("支払いID %s の更新処理を開始します。ユーザーID: %s", paymentID, userID)
+
 	// Get the payment details from the DB.
 	payment, err := u.db.GetPayment(paymentID)
 	if err != nil {
+		log.Printf("支払いの詳細取得に失敗しました。支払いID: %s, エラー: %v", paymentID, err)
 		return PaymentResponse{}, err
 	}
 
 	// Get the associated MoneyPool to check if the user is the owner.
 	moneyPool, err := u.db.GetMoneyPool(payment.MoneyPoolID)
 	if err != nil {
+		log.Printf("マネープールの詳細取得に失敗しました。支払いID: %s, エラー: %v", paymentID, err)
 		return PaymentResponse{}, err
 	}
 
 	// Check if the user is the owner of the MoneyPool.
 	if moneyPool.OwnerID != userID || moneyPool.ID != moneyPoolID {
-		return PaymentResponse{}, fmt.Errorf("unauthorized: user %s is not the owner of the MoneyPool %s", userID, payment.MoneyPoolID)
+		log.Printf("不正アクセス：ユーザーID %s はマネープールID %s の所有者ではありません。", userID, moneyPoolID)
+		return PaymentResponse{}, fmt.Errorf("unauthorized: user %s is not the owner of the MoneyPool %s", userID, moneyPoolID)
 	}
 
 	// Update the payment details.
@@ -132,9 +150,11 @@ func (u *Usecase) UpdatePayment(userID string, moneyPoolID string, paymentID str
 	// Persist the updated payment in the DB.
 	err = u.db.UpdatePayment(payment)
 	if err != nil {
+		log.Printf("支払いの更新に失敗しました。支払いID: %s, エラー: %v", paymentID, err)
 		return PaymentResponse{}, err
 	}
 
+	log.Printf("支払いID %s の更新が完了しました。ユーザーID: %s", paymentID, userID)
 	// Return the updated payment as a response.
 	return PaymentResponse{
 		ID:          payment.ID,
@@ -147,29 +167,37 @@ func (u *Usecase) UpdatePayment(userID string, moneyPoolID string, paymentID str
 	}, nil
 }
 
+// DeletePayment deletes a payment.
 func (u *Usecase) DeletePayment(userID string, paymentID string) error {
+	log.Printf("支払いID %s の削除処理を開始します。ユーザーID: %s", paymentID, userID)
+
 	// Get the payment to check ownership.
 	payment, err := u.db.GetPayment(paymentID)
 	if err != nil {
+		log.Printf("支払いの詳細取得に失敗しました。支払いID: %s, エラー: %v", paymentID, err)
 		return err
 	}
 
 	// Get the associated MoneyPool to check if the user is the owner.
 	moneyPool, err := u.db.GetMoneyPool(payment.MoneyPoolID)
 	if err != nil {
+		log.Printf("マネープールの詳細取得に失敗しました。支払いID: %s, エラー: %v", paymentID, err)
 		return err
 	}
 
 	// Check if the user is the owner of the MoneyPool.
 	if moneyPool.OwnerID != userID {
+		log.Printf("不正アクセス：ユーザーID %s はマネープールID %s の所有者ではありません。", userID, payment.MoneyPoolID)
 		return fmt.Errorf("unauthorized: user %s is not the owner of the MoneyPool %s", userID, payment.MoneyPoolID)
 	}
 
 	// Use the DB interface method to delete the payment.
 	err = u.db.DeletePayment(paymentID)
 	if err != nil {
+		log.Printf("支払いの削除に失敗しました。支払いID: %s, エラー: %v", paymentID, err)
 		return err
 	}
 
+	log.Printf("支払いID %s の削除が完了しました。ユーザーID: %s", paymentID, userID)
 	return nil
 }
