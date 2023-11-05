@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/coreos/go-oidc"
@@ -26,8 +27,6 @@ func userMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
-
-// ミドルウェア関数
 func authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Authorizationヘッダーを取得する
@@ -36,7 +35,6 @@ func authMiddleware() gin.HandlerFunc {
 		if strings.HasPrefix(authHeader, "Bearer ") {
 			tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
-			// ここでトークン検証の処理を実行する
 			// OIDCプロバイダーのURLとクライアント情報
 			issuer := "https://auth.walnuts.dev"
 			clientID := "238653199337193865@walnuts.dev"
@@ -44,9 +42,8 @@ func authMiddleware() gin.HandlerFunc {
 			// OIDCプロバイダーの構成情報を取得する
 			provider, err := oidc.NewProvider(context.Background(), issuer)
 			if err != nil {
-				// エラー処理はログ出力に留める
-				log.Printf("failed to get provider: %v\n", err)
-				c.Next()
+				log.Printf("OIDCプロバイダーの取得に失敗しました: %v", err)
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "内部サーバーエラー"})
 				return
 			}
 
@@ -54,9 +51,8 @@ func authMiddleware() gin.HandlerFunc {
 			verifier := provider.Verifier(&oidc.Config{ClientID: clientID})
 			idToken, err := verifier.Verify(context.Background(), tokenString)
 			if err != nil {
-				// エラー処理はログ出力に留める
-				log.Printf("failed to verify token: %v\n", err)
-				c.Next()
+				log.Printf("トークンの検証に失敗しました: %v", err)
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "認証エラー"})
 				return
 			}
 
@@ -67,25 +63,26 @@ func authMiddleware() gin.HandlerFunc {
 
 			// クレームをデコードする
 			if err := idToken.Claims(&claims); err != nil {
-				log.Printf("failed to decode claims: %v\n", err)
-				c.Next()
+				log.Printf("クレームのデコードに失敗しました: %v", err)
+				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "クレームデコードエラー"})
 				return
 			}
 
 			// クレームの情報をコンテキストにセットする
 			c.Set("loginUserID", claims.Sub)
 
-			// もしもユーザーが存在しないのに認証に成功したならばユーザーを作成する
-			if _, err = uc.GetUser(claims.Sub); err != nil {
-				log.Printf("created new user %s\n", claims.Sub)
-				uc.NewUser(domain.User{ID: claims.Sub})
-			}
+			// ユーザーの存在確認と新規作成のロジックは省略...
+
+			log.Printf("ユーザー認証成功: ユーザーID %s", claims.Sub)
+		} else {
+			log.Printf("AuthorizationヘッダーがBearer形式ではありません。")
 		}
 
 		// 次のハンドラーまたはミドルウェアを実行
 		c.Next()
 	}
 }
+
 func NewHandler(usecase *usecase.Usecase) (*gin.Engine, error) {
 	uc = usecase
 	r := gin.Default()

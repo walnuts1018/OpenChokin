@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/pkg/errors"
 )
@@ -134,31 +135,42 @@ func (d *dbImpl) DeleteMoneyPool(id string) error {
 }
 
 func (d *dbImpl) IsMoneyPoolSharedWithUser(id string, userID string) (bool, error) {
-	// Check if the MoneyPool with the provided ID is of type Restricted.
+	log.Printf("ユーザー共有マネープールのチェック開始: MoneyPoolID=%s, UserID=%s", id, userID)
+
+	// マネープールのタイプをチェックします。
 	var poolType string
-	query := `SELECT type FROM MoneyPool WHERE id = ?`
+	query := `SELECT type FROM MoneyPool WHERE id = $1`
 	err := d.db.Get(&poolType, query, id)
 	if err != nil {
-		return false, err // or return false, nil to ignore error handling
+		log.Printf("マネープールのタイプの取得に失敗しました: %v", err)
+		return false, err
+	}
+	log.Printf("マネープールのタイプ: %s", poolType)
+
+	// マネープールがRestrictedタイプでない場合は、共有されていないと判断します。
+	if poolType != "Restricted" {
+		log.Println("マネープールはRestrictedタイプではありません。共有されていません。")
+		return false, nil
 	}
 
-	// If not Restricted, it's not shared with specific users, so return an error or false as per your error handling policy.
-	if poolType != PublicTypeRestricted {
-		return false, nil // Pool is not restricted, hence not explicitly shared
-	}
-
+	// マネープールが特定のユーザーと共有されているかどうかを確認します。
 	query = `
-		SELECT EXISTS (
-			SELECT 1 FROM UserGroupMembership ugm
-			INNER JOIN RestrictedPublicationScope rps ON ugm.GroupID = rps.GroupID
-			WHERE rps.PoolID = ? AND ugm.UserID = ?
-		)`
-
-	var exists bool
-	err = d.db.Get(&exists, query, id, userID)
+		SELECT COUNT(*) FROM UserGroupMembership ugm
+		INNER JOIN RestrictedPublicationScope rps ON ugm.GroupID = rps.GroupID
+		WHERE rps.PoolID = $1 AND ugm.UserID = $2
+	`
+	var count int
+	err = d.db.Get(&count, query, id, userID)
 	if err != nil {
+		log.Printf("共有状態の確認中にエラーが発生しました: %v", err)
 		return false, err
 	}
 
-	return exists, nil
+	if count > 0 {
+		log.Println("マネープールは指定ユーザーと共有されています。")
+	} else {
+		log.Println("マネープールは指定ユーザーと共有されていません。")
+	}
+
+	return count > 0, nil
 }
