@@ -1,13 +1,37 @@
 package domain
 
-import "time"
+import (
+	"database/sql/driver"
+	"time"
+
+	"github.com/pkg/errors"
+)
 
 type PublicType string
 
+// Valuer interfaceを実装することで、PublicTypeがデータベースに保存可能な値になります。
+func (p PublicType) Value() (driver.Value, error) {
+	return string(p), nil
+}
+
+// Scanner interfaceを実装することで、データベースの値をPublicTypeにスキャンできるようになります。
+func (p *PublicType) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	val, ok := value.(string)
+	if !ok {
+		return errors.New("Type assertion to string failed")
+	}
+
+	*p = PublicType(val)
+	return nil
+}
+
 const (
-	PublicTypePrivate    PublicType = "private"
-	PublicTypePublic     PublicType = "public"
-	PublicTypeRestricted PublicType = "restricted"
+	PublicTypePrivate    string = "private"
+	PublicTypePublic     string = "public"
+	PublicTypeRestricted string = "restricted"
 )
 
 type User struct {
@@ -21,11 +45,11 @@ type UserGroup struct {
 }
 
 type MoneyPool struct {
-	ID          string     `db:"id"`
-	Name        string     `db:"name"`
-	Description string     `db:"description"`
-	Type        PublicType `db:"type"`
-	OwnerID     string     `db:"owner_id"`
+	ID          string `db:"id"`
+	Name        string `db:"name"`
+	Description string `db:"description"`
+	Type        string `db:"type"`
+	OwnerID     string `db:"owner_id"`
 }
 
 type MoneyProvider struct {

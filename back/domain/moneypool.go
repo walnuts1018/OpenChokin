@@ -7,13 +7,20 @@ import (
 )
 
 func (d *dbImpl) NewMoneyPool(moneyPool MoneyPool) (MoneyPool, error) {
+	// クエリ文字列で位置パラメータを使用します。
 	query := `INSERT INTO money_pool (name, description, type, owner_id)
-			  VALUES (:name, :description, :type, :owner_id)
+			  VALUES ($1, $2, $3, $4)
 			  RETURNING id`
-	err := d.db.QueryRowx(query, moneyPool).StructScan(&moneyPool)
+	// QueryRowを使用してIDを取得します。
+	var returnedID int64
+	err := d.db.QueryRow(query, moneyPool.Name, moneyPool.Description, moneyPool.Type, moneyPool.OwnerID).Scan(&returnedID)
 	if err != nil {
-		return MoneyPool{}, errors.Wrap(err, "Failed to create new MoneyPool")
+		return MoneyPool{}, errors.Wrap(err, "新規MoneyPoolの作成とIDの返却に失敗しました")
 	}
+
+	// 返却されたIDをmoneyPool構造体のIDフィールドに割り当てます。
+	moneyPool.ID = fmt.Sprintf("%d", returnedID)
+
 	return moneyPool, nil
 }
 
@@ -43,7 +50,7 @@ func (d *dbImpl) UpdateMoneyPool(moneyPool MoneyPool) error {
 		return err
 	}
 
-	var currentType PublicType
+	var currentType string
 	err = tx.Get(&currentType, "SELECT type FROM money_pool WHERE id = $1", moneyPool.ID)
 	if err != nil {
 		tx.Rollback()
@@ -74,7 +81,7 @@ func (d *dbImpl) ShareMoneyPoolWithUserGroups(moneyPoolID string, shareUserGroup
 		return err
 	}
 
-	var poolType PublicType
+	var poolType string
 	err = tx.Get(&poolType, "SELECT type FROM money_pool WHERE id = $1", moneyPoolID)
 	if err != nil {
 		tx.Rollback()
@@ -124,7 +131,7 @@ func (d *dbImpl) DeleteMoneyPool(id string) error {
 
 func (d *dbImpl) IsMoneyPoolSharedWithUser(id string, userID string) (bool, error) {
 	// Check if the MoneyPool with the provided ID is of type Restricted.
-	var poolType PublicType
+	var poolType string
 	query := `SELECT type FROM MoneyPool WHERE id = ?`
 	err := d.db.Get(&poolType, query, id)
 	if err != nil {
