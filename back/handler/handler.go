@@ -72,6 +72,9 @@ func authMiddleware() gin.HandlerFunc {
 			c.Set("loginUserID", claims.Sub)
 
 			// ユーザーの存在確認と新規作成のロジックは省略...
+			if _, err := uc.GetUser(claims.Sub); err != nil {
+				uc.NewUser(domain.User{ID: claims.Sub})
+			}
 
 			log.Printf("ユーザー認証成功: ユーザーID %s", claims.Sub)
 		} else {
