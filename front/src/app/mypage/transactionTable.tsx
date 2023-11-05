@@ -39,34 +39,34 @@ export function TransactionTable({
 
   useEffect(() => {
     const getMoneyPools = async () => {
-      if (session && session?.user) {
-        const res = await fetch(
-          `/api/back/moneypools/${moneyPoolID}?user_id=${userID}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${session.user.idToken}`,
-            },
-          }
-        );
-        if (res.ok) {
-          const json = await res.json();
-          console.log("get moneypools", json);
-          const mpr: MoneyPoolResponse = json;
-          if (mpr.payments) {
-            const payments: MoneyTransaction[] = mpr.payments.map((payment) => {
-              return {
-                id: payment.id,
-                date: new Date(payment.date),
-                title: payment.title,
-                amount: payment.amount,
-              };
-            });
-            setTransactions(payments);
-          }
-        } else {
-          console.log();
+      const authHeader =
+        userID === session?.user.sub ? `Bearer ${session.user.idToken}` : "";
+      const res = await fetch(
+        `/api/back/moneypools/${moneyPoolID}?user_id=${userID}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: authHeader,
+          },
         }
+      );
+      if (res.ok) {
+        const json = await res.json();
+        console.log("get moneypools", json);
+        const mpr: MoneyPoolResponse = json;
+        if (mpr.payments) {
+          const payments: MoneyTransaction[] = mpr.payments.map((payment) => {
+            return {
+              id: payment.id,
+              date: new Date(payment.date),
+              title: payment.title,
+              amount: payment.amount,
+            };
+          });
+          setTransactions(payments);
+        }
+      } else {
+        console.log();
       }
     };
     getMoneyPools();

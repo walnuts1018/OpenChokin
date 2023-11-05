@@ -9,6 +9,8 @@ import { useRef } from "react";
 import { useSession } from "next-auth/react";
 import Picker from "emoji-picker-react";
 import { EmojiClickData } from "emoji-picker-react";
+import { colors } from "@mui/material";
+import Image from "next/image";
 
 const tabColors = ["#f5c33f", "#31aedd"];
 const theme1 = createTheme({
@@ -47,6 +49,7 @@ export function Balance({
   moneypoolSums: MoneyPoolSum[];
   moneyProviders: MoneyProviderSum[];
 }) {
+  console.log("render moneyProviders", moneyProviders);
   const { data: session } = useSession();
   const [swiper, setSwiper] = useState<SwiperClass>();
   const [swiperIndex, setSwiperIndex] = useState(0);
@@ -106,7 +109,7 @@ export function Balance({
         const data = await res.json();
         setNewMoneyProviderName("");
         setNewMoneyProviderBalance("");
-        console.log(data);
+        console.log("create money provider raw", data);
       }
     }
   }
@@ -154,8 +157,19 @@ export function Balance({
             <SwiperSlide className="">
               <ThemeProvider theme={theme1}>
                 <div className="border-2 border-transparent h-full mx-2 overflow-auto overflow-x-hidden">
+                  <div
+                    className="balance-header flex w-full h-4 justify-end px-0 items-center font-Noto font-bold gap-x-4"
+                    style={{ color: tabColors[0] }}
+                  >
+                    <div>公開</div>
+                    {session?.user.sub === userID ? <div>削除</div> : <></>}
+                  </div>
                   {moneypoolSums.map((moneyPool, index) => (
-                    <BalanceItem key={moneyPool.id} moneyPool={moneyPool} />
+                    <BalanceItem
+                      key={moneyPool.id}
+                      moneyPool={moneyPool}
+                      userID={userID}
+                    />
                   ))}
                 </div>
               </ThemeProvider>
@@ -322,7 +336,7 @@ export function Balance({
                       <input
                         type="text"
                         ref={inputEl}
-                        className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
+                        className="h-[80%] hover:border-0 focus:outline-none px-0"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             e.preventDefault();
@@ -336,7 +350,7 @@ export function Balance({
                       />
                       <input
                         type="text"
-                        className="h-[80%] hover:border-0 focus:outline-none w-[40%]"
+                        className="h-[80%] hover:border-0 focus:outline-none w-[30%]"
                         onKeyDown={async (e) => {
                           if (e.key === "Enter") {
                             if (e.currentTarget) {
@@ -426,10 +440,17 @@ function SwiperTabs({
   );
 }
 
-function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
+function BalanceItem({
+  moneyPool,
+  userID,
+}: {
+  moneyPool: MoneyPoolSum;
+  userID: string;
+}) {
   const { data: session } = useSession();
   const [isPublic, setIsPublic] = useState(moneyPool.type === "public");
   const [changePublicCheckIsOpen, setChangePublicCheckIsOpen] = useState(false);
+  const [deleteCheckIsOpen, setDeleteCheckIsOpen] = useState(false);
   const [isEditEmoji, setIsEditEmoji] = useState(false);
   const [isEditName, setIsEditName] = useState(false);
   const inputName = useRef<HTMLInputElement>(null!);
@@ -505,8 +526,22 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
     setMoneyPoolType(type);
   }
 
+  async function deleteMoneyPool(id: string) {
+    if (session && session.user) {
+      const res = await fetch(`/api/back/moneypools/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.user.idToken}`,
+        },
+      });
+      if (res.ok) {
+        console.log("delete moneypool", "");
+      }
+    }
+  }
+
   return (
-    <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-4 overflow-hidden border-b-2 border-gray-300">
+    <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-0 overflow-hidden border-b-2 border-gray-300">
       <div className="w-10 h-10">
         {isEditEmoji ? (
           <div className="w-full h-full">
@@ -611,6 +646,28 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
           sx={{ "& .MuiSvgIcon-root": { fontSize: 28 } }}
         />
       </div>
+      <div>
+        {session?.user.sub === userID ? (
+          <div
+            className="w-full"
+            onClick={() => {
+              setDeleteCheckIsOpen(true);
+            }}
+            tabIndex={0}
+          >
+            <Image
+              src="/icons/delete_FILL0_wght400_GRAD0_opsz24.svg"
+              alt="x"
+              width={30}
+              height={30}
+              style={{ objectFit: "contain", color: tabColors[0] }}
+              className="min-w-[30px] max-w-[30px] cursor-pointer"
+            />
+          </div>
+        ) : (
+          <></>
+        )}
+      </div>
       <Modal
         isOpen={changePublicCheckIsOpen}
         className="flex justify-center items-center t-0 l-0 w-full h-full"
@@ -637,6 +694,38 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
             <button
               className="bg-white hover:bg-gray-100 rounded-full  text-primary-default px-4 py-1 border-primary-default border-2 font-Noto font-semibold text-xl"
               onClick={() => setChangePublicCheckIsOpen(false)}
+            >
+              キャンセル
+            </button>
+          </div>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={deleteCheckIsOpen}
+        className="flex justify-center items-center t-0 l-0 w-full h-full"
+      >
+        <div
+          className="bg-transparent w-full h-full absolute z-10"
+          onClick={() => setDeleteCheckIsOpen(false)}
+        />
+        <div className="w-1/2 h-1/3 bg-gray-50  transform bg-opacity-90 shadow-2xl rounded-3xl flex flex-col justify-center items-center font-Noto font-semibold text-xl gap-y-20 z-50 border-primary-default border-2">
+          <div>Money Pool {moneyPool.name} を削除してもよろしいですか？</div>
+          <div className="flex justify-between gap-x-8">
+            <button
+              className="bg-primary-default hover:bg-primary-dark rounded-full  text-white px-4 py-1 border-primary-default border-2 hover:border-primary-dark font-Noto font-semibold text-xl"
+              onClick={() => {
+                setDeleteCheckIsOpen(false);
+                deleteMoneyPool(moneyPool.id);
+                setIsPublic((v) => {
+                  return !v;
+                });
+              }}
+            >
+              削除する
+            </button>
+            <button
+              className="bg-white hover:bg-gray-100 rounded-full  text-primary-default px-4 py-1 border-primary-default border-2 font-Noto font-semibold text-xl"
+              onClick={() => setDeleteCheckIsOpen(false)}
             >
               キャンセル
             </button>
@@ -689,8 +778,9 @@ function MoneyProviderItems({
     setMoneyProviderName(newValue);
   }
 
-  async function onBalanceChanged(newValue: number) {
+  async function onBalanceChanged(newValue: string) {
     if (session && session.user) {
+      console.log("change balance data", newValue);
       const res = await fetch(`/api/back/moneyproviders/${MoneyProvider.id}`, {
         method: "PATCH",
         headers: {
@@ -698,12 +788,11 @@ function MoneyProviderItems({
         },
         body: JSON.stringify({
           name: moneyProviderName,
-          balance: newValue,
+          balance: Number(newValue),
         }),
       });
       if (res.ok) {
-        const data = await res.json();
-        console.log(data);
+        console.log("changed balance");
       }
     }
     setMoneyProviderBalance(newValue);
@@ -764,19 +853,19 @@ function MoneyProviderItems({
                 defaultValue={providerBalance}
                 value={providerBalance}
                 onBlur={(fe) => {
-                  onBalanceChanged(Number(fe.currentTarget.value));
+                  onBalanceChanged(providerBalance);
                   if (!fe.currentTarget.contains(fe.relatedTarget)) {
                     setIsEditBalance(false);
                   }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    onBalanceChanged(Number(e.currentTarget.value));
+                    onBalanceChanged(providerBalance);
                     e.currentTarget.blur();
                   }
                 }}
                 onChange={(e) => {
-                  setProviderBalance(Number(e.currentTarget.value));
+                  setProviderBalance(e.currentTarget.value);
                 }}
                 autoFocus
                 tabIndex={0}

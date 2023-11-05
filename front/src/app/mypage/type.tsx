@@ -43,5 +43,5 @@ export type MoneyTransaction = {
 export type MoneyProviderSum = {
   id: string;
   name: string;
-  balance: number;
+  balance: string;
 };
