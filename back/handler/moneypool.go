@@ -117,9 +117,9 @@ func getMoneyPool(c *gin.Context) {
 func createMoneyPool(c *gin.Context) {
 	userID := c.MustGet("loginUserID").(string) // Get the authenticated user's ID
 	var request struct {
-		Name        string            `json:"name"`
-		Description string            `json:"description"`
-		Type        domain.PublicType `json:"type"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Type        string `json:"type"`
 	}
 	if err := c.BindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -154,9 +154,9 @@ func updateMoneyPool(c *gin.Context) {
 	userID := c.MustGet("loginUserID").(string) // Get the authenticated user's ID
 	moneyPoolID := c.Param("moneypool_id")
 	var request struct {
-		Name        string            `json:"name"`
-		Description string            `json:"description"`
-		Type        domain.PublicType `json:"type"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Type        string `json:"type"`
 	}
 	if err := c.BindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

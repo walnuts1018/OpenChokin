@@ -5,10 +5,12 @@ import (
 )
 
 func (d *dbImpl) NewStore(store Store) (Store, error) {
+	// クエリ文字列で位置パラメータを使って、:nameと:creator_idを$1と$2に置き換えます。
 	query := `INSERT INTO store (name, creator_id)
-			  VALUES (:name, :creator_id)
+			  VALUES ($1, $2)
 			  RETURNING id`
-	err := d.db.QueryRowx(query, store).StructScan(&store)
+	// QueryRowを使ってSQLクエリを実行し、戻り値のIDをスキャンします。
+	err := d.db.QueryRow(query, store.Name, store.CreatorID).Scan(&store.ID)
 	if err != nil {
 		return Store{}, fmt.Errorf("failed to create new Store: %v", err)
 	}

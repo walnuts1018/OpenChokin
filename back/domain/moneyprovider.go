@@ -5,10 +5,12 @@ import (
 )
 
 func (d *dbImpl) NewMoneyProvider(moneyProvider MoneyProvider) (MoneyProvider, error) {
+	// クエリ文字列で位置パラメータを使用します。
 	query := `INSERT INTO money_providers (name, creator_id, balance)
-			  VALUES (:name, :creator_id, :balance)
-			  RETURNING id`
-	err := d.db.QueryRowx(query, moneyProvider).StructScan(&moneyProvider)
+              VALUES ($1, $2, $3)
+              RETURNING id`
+	// QueryRowを使用してSQLクエリを実行し、戻り値のIDを取得します。
+	err := d.db.QueryRow(query, moneyProvider.Name, moneyProvider.CreatorID, moneyProvider.Balance).Scan(&moneyProvider.ID)
 	if err != nil {
 		return MoneyProvider{}, fmt.Errorf("failed to create new MoneyProvider: %v", err)
 	}

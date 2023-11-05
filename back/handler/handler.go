@@ -19,6 +19,10 @@ var (
 func userMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("loginUserID", "1")
+		if _, err := uc.GetUser("1"); err != nil {
+			log.Printf("created new user %s\n", "1")
+			uc.NewUser(domain.User{ID: "1"})
+		}
 		c.Next()
 	}
 }

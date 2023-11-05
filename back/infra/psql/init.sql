@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS money_pool (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
-    type public_type NOT NULL,
+    type VARCHAR(50) NOT NULL,
     owner_id BIGINT NOT NULL,
     FOREIGN KEY (owner_id) REFERENCES users(id)
 );

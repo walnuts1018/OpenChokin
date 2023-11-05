@@ -13,8 +13,8 @@ type MoneyPoolSummary struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 	// このIDのMoneyPoolに紐づくPlanではない実際の支払いの総額
-	Sum  float64           `json:"sum"`
-	Type domain.PublicType `json:"type"`
+	Sum  float64 `json:"sum"`
+	Type string  `json:"type"`
 }
 
 // MoneyPoolsSummaryResponse
@@ -80,11 +80,11 @@ type PaymentSummary struct {
 	IsPlanned   bool      `json:"is_planned"`
 }
 type MoneyPoolResponse struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Type        domain.PublicType `json:"type"`
-	Payments    []PaymentSummary  `json:"payments"`
+	ID          string           `json:"id"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	Type        string           `json:"type"`
+	Payments    []PaymentSummary `json:"payments"`
 }
 
 func (u Usecase) GetMoneyPool(userID string, loginUserID string, moneyPoolID string) (MoneyPoolResponse, error) {
@@ -142,13 +142,13 @@ func (u Usecase) GetMoneyPool(userID string, loginUserID string, moneyPoolID str
 		ID:          moneyPool.ID,
 		Name:        moneyPool.Name,
 		Description: moneyPool.Description,
-		Type:        moneyPool.Type,
+		Type:        string(moneyPool.Type),
 		Payments:    paymentSummaries,
 	}, nil
 }
 
 // AddMoneyPool adds a new money pool to the database and logs the process in Japanese.
-func (u Usecase) AddMoneyPool(userID string, name string, description string, publicType domain.PublicType) (MoneyPoolResponse, error) {
+func (u Usecase) AddMoneyPool(userID string, name string, description string, publicType string) (MoneyPoolResponse, error) {
 	log.Printf("ユーザーID: %sによる新しいマネープールの作成を開始します。名前: %s", userID, name)
 
 	newMoneyPool := domain.MoneyPool{
@@ -169,13 +169,13 @@ func (u Usecase) AddMoneyPool(userID string, name string, description string, pu
 		ID:          createdMoneyPool.ID,
 		Name:        createdMoneyPool.Name,
 		Description: createdMoneyPool.Description,
-		Type:        createdMoneyPool.Type,
+		Type:        string(createdMoneyPool.Type),
 		Payments:    []PaymentSummary{}, // No payments right after creation
 	}, nil
 }
 
 // UpdateMoneyPool updates an existing money pool and logs the process in Japanese.
-func (u Usecase) UpdateMoneyPool(userID string, moneyPoolID string, name string, description string, publicationType domain.PublicType) (MoneyPoolResponse, error) {
+func (u Usecase) UpdateMoneyPool(userID string, moneyPoolID string, name string, description string, publicationType string) (MoneyPoolResponse, error) {
 	log.Printf("ユーザーID: %sがマネープールID: %sを更新しようとしています。", userID, moneyPoolID)
 
 	existingMoneyPool, err := u.db.GetMoneyPool(moneyPoolID)
@@ -208,7 +208,7 @@ func (u Usecase) UpdateMoneyPool(userID string, moneyPoolID string, name string,
 		ID:          updatedMoneyPool.ID,
 		Name:        updatedMoneyPool.Name,
 		Description: updatedMoneyPool.Description,
-		Type:        updatedMoneyPool.Type,
+		Type:        string(updatedMoneyPool.Type),
 	}, nil
 }
 

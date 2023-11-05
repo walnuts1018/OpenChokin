@@ -3,10 +3,12 @@ package domain
 import "fmt"
 
 func (d *dbImpl) NewPayment(payment Payment) (Payment, error) {
+	// クエリ文字列で位置パラメータを使用します。$1、$2...はそれぞれの値のプレースホルダーです。
 	query := `INSERT INTO payment (money_pool_id, date, title, amount, description, is_planned, store_id)
-			  VALUES (:money_pool_id, :transaction_date, :title, :amount, :description, :is_expectation, :store_id)
+			  VALUES ($1, $2, $3, $4, $5, $6, $7)
 			  RETURNING id`
-	err := d.db.QueryRowx(query, payment).StructScan(&payment)
+	// QueryRowを使用してSQLクエリを実行し、戻り値のIDを取得します。
+	err := d.db.QueryRow(query, payment.MoneyPoolID, payment.Date, payment.Title, payment.Amount, payment.Description, payment.IsPlanned, payment.StoreID).Scan(&payment.ID)
 	if err != nil {
 		return Payment{}, fmt.Errorf("failed to create new Payment: %v", err)
 	}

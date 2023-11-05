@@ -7,11 +7,14 @@ import (
 )
 
 func (d *dbImpl) NewItem(item Item) (Item, error) {
+	// クエリ文字列で名前付きパラメータを位置パラメータに置き換えます
 	query := `INSERT INTO item (name, creator_id)
-			  VALUES (:name, :creator_id)
+			  VALUES ($1, $2)
 			  RETURNING id`
-	err := d.db.QueryRowx(query, item).StructScan(&item)
+	// QueryRowを使ってクエリを実行し、結果のIDをスキャンします
+	err := d.db.QueryRow(query, item.Name, item.CreatorID).Scan(&item.ID)
 	if err != nil {
+		// errors.Wrapを使って、エラーのコンテキストを提供します
 		return Item{}, errors.Wrap(err, "Failed to create new Item")
 	}
 	return item, nil
