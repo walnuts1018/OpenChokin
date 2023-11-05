@@ -26,17 +26,12 @@ func (u Usecase) GetMoneyProvidersSummary(userID string) (MoneyProvidersSummaryR
 
 	var providersSummary []MoneyProviderSummary
 	for _, provider := range moneyProviders {
-		balance, err := u.db.GetMoneyPoolBalance(provider.ID, false)
-		if err != nil {
-			log.Printf("MoneyProvider ID %s の残高取得時にエラーが発生しました。エラーを記録し、次のプロバイダーに続けます: %v", provider.ID, err)
-			continue
-		}
 		providersSummary = append(providersSummary, MoneyProviderSummary{
 			ID:      provider.ID,
 			Name:    provider.Name,
-			Balance: balance,
+			Balance: provider.Balance,
 		})
-		log.Printf("MoneyProvider ID %s: 名前：%s, 残高：%f", provider.ID, provider.Name, balance)
+		log.Printf("MoneyProvider ID %s: 名前：%s, 残高：%f", provider.ID, provider.Name, provider.Balance)
 	}
 
 	log.Printf("ユーザーID %s のMoneyProvidersの概要取得が完了しました。", userID)
