@@ -50,6 +50,7 @@ type MoneyPool struct {
 	Description string `db:"description"`
 	Type        string `db:"type"`
 	OwnerID     string `db:"owner_id"`
+	Emoji       string `db:"emoji"`
 }
 
 type MoneyProvider struct {

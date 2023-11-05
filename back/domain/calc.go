@@ -6,7 +6,7 @@ import "time"
 // It is used to avoid repetition in public methods.
 func (d *dbImpl) getMoneyPoolBalanceInternal(moneyPoolID string, date *time.Time, includePlanned bool) (float64, error) {
 	var balance float64
-	query := `SELECT SUM(amount) FROM payment WHERE money_pool_id = $1`
+	query := `SELECT COALESCE(SUM(amount), 0) FROM payment WHERE money_pool_id = $1`
 	args := []interface{}{moneyPoolID}
 
 	// Add date condition if it is provided
@@ -23,11 +23,6 @@ func (d *dbImpl) getMoneyPoolBalanceInternal(moneyPoolID string, date *time.Time
 	err := d.db.Get(&balance, query, args...)
 	if err != nil {
 		return 0, err
-	}
-
-	// Handle cases where SUM may return NULL if there are no rows
-	if balance == 0 {
-		return 0, nil
 	}
 
 	return balance, nil
