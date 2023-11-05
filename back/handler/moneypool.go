@@ -120,6 +120,7 @@ func createMoneyPool(c *gin.Context) {
 		Name        string `json:"name"`
 		Description string `json:"description"`
 		Type        string `json:"type"`
+		Emoji       string `json:"emoji"`
 	}
 	if err := c.BindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -129,7 +130,7 @@ func createMoneyPool(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "request type does not match any options"})
 		return
 	}
-	response, err := uc.AddMoneyPool(userID, request.Name, request.Description, request.Type)
+	response, err := uc.AddMoneyPool(userID, request.Name, request.Description, request.Type, request.Emoji)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -157,6 +158,7 @@ func updateMoneyPool(c *gin.Context) {
 		Name        string `json:"name"`
 		Description string `json:"description"`
 		Type        string `json:"type"`
+		Emoji       string `json:"emoji"`
 	}
 	if err := c.BindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -166,7 +168,7 @@ func updateMoneyPool(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "request type does not match any options"})
 		return
 	}
-	response, err := uc.UpdateMoneyPool(userID, moneyPoolID, request.Name, request.Description, request.Type)
+	response, err := uc.UpdateMoneyPool(userID, moneyPoolID, request.Name, request.Description, request.Type, request.Emoji)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

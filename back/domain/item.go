@@ -42,8 +42,10 @@ func (d *dbImpl) GetItemsByUserID(userID string) ([]Item, error) {
 
 // UpdateItem updates an existing item.
 func (d *dbImpl) UpdateItem(item Item) error {
-	query := `UPDATE item SET name = :name, creator_id = :creator_id WHERE id = :id`
-	_, err := d.db.Exec(query, item)
+	// Use positional parameters with $1, $2, etc.
+	query := `UPDATE item SET name = $1, creator_id = $2 WHERE id = $3`
+	// Use the Exec function with the struct's fields passed in the order of the parameters.
+	_, err := d.db.Exec(query, item.Name, item.CreatorID, item.ID)
 	if err != nil {
 		return fmt.Errorf("error updating item: %v", err)
 	}
