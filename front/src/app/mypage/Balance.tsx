@@ -6,8 +6,9 @@ import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
 import Modal from "react-modal";
 import { Plus } from "react-feather";
 import { useRef } from "react";
-import { useEffect } from "react";
 import { useSession } from "next-auth/react";
+import Picker from "emoji-picker-react";
+import { EmojiClickData } from "emoji-picker-react";
 
 const tabColors = ["#f5c33f", "#31aedd"];
 const theme1 = createTheme({
@@ -55,6 +56,16 @@ export function Balance({
   const [newMoneyPoolEmoji, setNewMoneyPoolEmoji] = useState("");
   const [newMoneyPoolName, setNewMoneyPoolName] = useState("");
 
+  const [newMoneyProviderName, setNewMoneyProviderName] = useState("");
+  const [newMoneyProviderBalance, setNewMoneyProviderBalance] = useState("");
+
+  const [isEmojiPicking, setIsEmojiPicking] = useState(false);
+
+  const onEmojiClick = (emoji: EmojiClickData, event: MouseEvent) => {
+    setNewMoneyPoolEmoji(emoji.emoji);
+    setIsEmojiPicking(false);
+  };
+
   async function addMoneyPool() {
     if (session && session.user) {
       const res = await fetch(`/api/back/moneypools`, {
@@ -63,6 +74,7 @@ export function Balance({
           Authorization: `Bearer ${session.user.idToken}`,
         },
         body: JSON.stringify({
+          emoji: newMoneyPoolEmoji,
           name: newMoneyPoolName,
           description: "",
           type: "private",
@@ -70,6 +82,30 @@ export function Balance({
       });
       if (res.ok) {
         const data = await res.json();
+        setNewMoneyPoolEmoji("");
+        setNewMoneyPoolName("");
+        console.log(data);
+      }
+    }
+  }
+
+  async function addMoneyProvider() {
+    console.log("addMoneyProvider");
+    if (session && session.user) {
+      const res = await fetch(`/api/back/moneyproviders`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.user.idToken}`,
+        },
+        body: JSON.stringify({
+          name: newMoneyProviderName,
+          balance: Number(newMoneyProviderBalance),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNewMoneyProviderName("");
+        setNewMoneyProviderBalance("");
         console.log(data);
       }
     }
@@ -178,7 +214,14 @@ export function Balance({
                     >
                       <Plus className="h-full w-full" />
                     </button>
-                    <div className="w-11/12 flex gap-2 justify-start items-center p-1">
+                    <div className="w-11/12 flex gap-2 justify-start items-center p-1 relative">
+                      {isEmojiPicking ? (
+                        <div className=" absolute bottom-0">
+                          <Picker onEmojiClick={onEmojiClick} />
+                        </div>
+                      ) : (
+                        <></>
+                      )}
                       <input
                         type="text"
                         ref={inputEl}
@@ -189,6 +232,9 @@ export function Balance({
                           }
                         }}
                         value={newMoneyPoolEmoji}
+                        onClick={(e) => {
+                          setIsEmojiPicking(true);
+                        }}
                         onChange={(e) => {
                           setNewMoneyPoolEmoji(e.target.value);
                         }}
@@ -253,21 +299,21 @@ export function Balance({
               >
                 {isAddMode2 ? (
                   <div
-                    className={`flex h-12 items-center gap-2 w-full border-2 border-gray-200 hover:border-primary-default rounded-full shadow-md px-2 font-Noto`}
+                    className={`flex h-12 items-center gap-2 w-full border-2 border-gray-200 rounded-full shadow-md px-2 font-Noto`}
                     onMouseOut={(e) => {
                       e.currentTarget.style.borderColor = "transparent";
                     }}
                     onMouseOver={(e) => {
-                      e.currentTarget.style.borderColor = tabColors[0];
+                      e.currentTarget.style.borderColor = tabColors[1];
                     }}
                   >
                     <button
                       className="h-5/6"
-                      style={{ color: tabColors[0] }}
+                      style={{ color: tabColors[1] }}
                       tabIndex={0}
                       onClick={async (e) => {
                         e.preventDefault();
-                        await addMoneyPool();
+                        await addMoneyProvider();
                       }}
                     >
                       <Plus className="h-full w-full" />
@@ -283,6 +329,10 @@ export function Balance({
                           }
                         }}
                         placeholder="名前"
+                        value={newMoneyProviderName}
+                        onChange={(e) => {
+                          setNewMoneyProviderName(e.target.value);
+                        }}
                       />
                       <input
                         type="text"
@@ -293,29 +343,39 @@ export function Balance({
                               e.currentTarget.blur();
                             }
                             e.preventDefault();
-                            await addMoneyPool();
+                            await addMoneyProvider();
                           }
                         }}
                         placeholder="残高"
+                        value={newMoneyProviderBalance}
+                        onChange={(e) => {
+                          setNewMoneyProviderBalance(e.target.value);
+                        }}
                       />
                     </div>
                   </div>
                 ) : (
                   <div
-                    className="flex h-12 items-center gap-2 w-full border-2 border-transparent hover:bg-gray-50 hover:border-primary-default rounded-full hover:shadow-md px-2 font-Noto"
+                    className="flex h-12 items-center gap-2 w-full border-2 border-transparent hover:bg-gray-50  rounded-full hover:shadow-md px-2 font-Noto"
                     onMouseOut={(e) => {
                       e.currentTarget.style.borderColor = "transparent";
                     }}
                     onMouseOver={(e) => {
-                      e.currentTarget.style.borderColor = tabColors[0];
+                      e.currentTarget.style.borderColor = tabColors[1];
                     }}
                   >
-                    <div className="h-5/6  border-primary-default aspect-square">
+                    <div
+                      className="h-5/6   aspect-square"
+                      style={{ borderColor: tabColors[1] }}
+                    >
                       <div
                         className="h-full w-full"
-                        style={{ color: tabColors[0] }}
+                        style={{ color: tabColors[1] }}
                       >
-                        <Plus className="h-full w-full" />
+                        <Plus
+                          className="h-full w-full"
+                          style={{ borderColor: tabColors[1] }}
+                        />
                       </div>
                     </div>
                     追加
@@ -439,7 +499,7 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
       });
       if (res.ok) {
         const data = await res.json();
-        console.log(data);
+        console.log("change public", data);
       }
     }
     setMoneyPoolType(type);
@@ -487,7 +547,7 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
         )}
       </div>
       <div className="flex items-center justify-between w-9/12">
-        <div className="w-1/2  h-full">
+        <div className="w-1/2 h-10 min-w-[10px]">
           {isEditName ? (
             <div className="w-full h-full">
               <input
@@ -513,7 +573,7 @@ function BalanceItem({ moneyPool }: { moneyPool: MoneyPoolSum }) {
             </div>
           ) : (
             <div
-              className="cursor-pointer"
+              className="cursor-pointer w-full h-full"
               onClick={() => {
                 setIsEditName((v) => {
                   return !v;

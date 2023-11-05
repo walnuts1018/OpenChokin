@@ -25,9 +25,13 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 export function TransactionTable({
   moneyPoolID,
   scroll,
+  userID,
+  reloadContext,
 }: {
   moneyPoolID: string;
   scroll: boolean;
+  userID: string;
+  reloadContext: {};
 }) {
   const [transactions, setTransactions] = useState<MoneyTransaction[]>([]);
   const scrollBottomRef = useRef<HTMLTableRowElement>(null);
@@ -36,17 +40,37 @@ export function TransactionTable({
   useEffect(() => {
     const getMoneyPools = async () => {
       if (session && session?.user) {
-        const res = await fetch(`/backend/v1/moneypools/${moneyPoolID}`, {
-          method: "GET",
-        });
+        const res = await fetch(
+          `/api/back/moneypools/${moneyPoolID}?user_id=${userID}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${session.user.idToken}`,
+            },
+          }
+        );
         if (res.ok) {
-          const mpr: MoneyPoolResponse = await res.json();
-          setTransactions(mpr.payments);
+          const json = await res.json();
+          console.log("get moneypools", json);
+          const mpr: MoneyPoolResponse = json;
+          if (mpr.payments) {
+            const payments: MoneyTransaction[] = mpr.payments.map((payment) => {
+              return {
+                id: payment.id,
+                date: new Date(payment.date),
+                title: payment.title,
+                amount: payment.amount,
+              };
+            });
+            setTransactions(payments);
+          }
+        } else {
+          console.log();
         }
       }
     };
     getMoneyPools();
-  }, [session, moneyPoolID]);
+  }, [session, moneyPoolID, userID, reloadContext]);
 
   useLayoutEffect(() => {
     if (scroll) {
@@ -91,7 +115,7 @@ export function TransactionTable({
                 scope="row"
                 className="border-l-0"
               >
-                {transaction.date.toLocaleDateString()}
+                {transaction.date && transaction.date.toLocaleDateString()}
               </StyledTableCell>
               <StyledTableCell align="left" className="">
                 {transaction.title}

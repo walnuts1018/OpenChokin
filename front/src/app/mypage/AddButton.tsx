@@ -5,9 +5,11 @@ import { useSession } from "next-auth/react";
 export function AddButton({
   color,
   moneyPoolID,
+  setReloadContext,
 }: {
   color: string;
   moneyPoolID: string;
+  setReloadContext: React.Dispatch<React.SetStateAction<{}>>;
 }) {
   const { data: session } = useSession();
   const [isAddMode, setIsAddMode] = useState(false);
@@ -27,23 +29,24 @@ export function AddButton({
 
   async function addTransaction() {
     if (session && session.user) {
-      const res = await fetch(`/moneypools/${moneyPoolID}/payments`, {
+      const res = await fetch(`/api/back/moneypools/${moneyPoolID}/payments`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${session.user.idToken}`,
         },
         body: JSON.stringify({
           title: transactionTitle,
-          amount: transactionAmount,
+          amount: Number(transactionAmount),
           description: "",
           is_planned: false,
         }),
       });
       if (res.ok) {
-        const data = await res.json();
-        console.log(data);
         setTransactionTitle("");
         setTransactionAmount("");
+        setReloadContext({});
+      } else {
+        console.log("post transaction error", res);
       }
     }
   }

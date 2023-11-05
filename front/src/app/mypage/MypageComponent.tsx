@@ -10,6 +10,9 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import Image from "next/image";
 import { AddButton } from "./AddButton";
 import { MoneyPoolSum } from "./type";
+import { createContext } from "react";
+
+export const TransactionContext = createContext({});
 
 export function MypageComponent({ userID }: { userID?: string }) {
   return (
@@ -44,22 +47,9 @@ function MypageContents({ userID }: { userID?: string }) {
   const { data: session } = useSession();
   const [moneyPoolIndex, setMoneyPoolIndex] = useState(0);
   const [swiper, setSwiper] = useState<SwiperClass>();
-  const [moneyPoolSums, setMoneyPoolSums] = useState<MoneyPoolSum[]>([
-    {
-      id: "1",
-      name: "食費",
-      sum: 1000,
-      type: "public",
-      emoji: "🍣",
-    },
-  ]);
-  const [moneyProviders, setMoneyProviders] = useState<MoneyProviderSum[]>([
-    {
-      id: "1",
-      name: "PayPay",
-      balance: 1000,
-    },
-  ]);
+  const [moneyPoolSums, setMoneyPoolSums] = useState<MoneyPoolSum[]>([]);
+  const [moneyProviders, setMoneyProviders] = useState<MoneyProviderSum[]>([]);
+  const [tableReloadContext, setTableReloadContext] = useState({});
 
   if (userID === undefined) {
     userID = session?.user.sub;
@@ -79,8 +69,9 @@ function MypageContents({ userID }: { userID?: string }) {
         );
         if (res.ok) {
           const json = await res.json();
-          if (json.Pool !== null && json.Pool !== undefined) {
-            const mps: MoneyPoolSum[] = json.Pool as MoneyPoolSum[];
+          console.log("getMoneyPools json raw", json);
+          if (json.pools !== null && json.pools !== undefined) {
+            const mps: MoneyPoolSum[] = json.pools as MoneyPoolSum[];
             setMoneyPoolSums(mps);
           }
         }
@@ -98,8 +89,8 @@ function MypageContents({ userID }: { userID?: string }) {
         if (res.ok) {
           const json = await res.json();
           console.log(json);
-          if (json.Providers !== null && json.Provider !== undefined) {
-            const mps: MoneyProviderSum[] = json.Providers;
+          if (json.providers !== null && json.providers !== undefined) {
+            const mps: MoneyProviderSum[] = json.providers;
             setMoneyProviders(mps);
           }
         }
@@ -110,7 +101,7 @@ function MypageContents({ userID }: { userID?: string }) {
     getMoneyProviders();
   }, [session, userID]);
 
-  if (userID) {
+  if (userID !== undefined) {
     console.log(typeof moneyPoolSums);
     console.log(moneyPoolSums);
     return (
@@ -135,13 +126,15 @@ function MypageContents({ userID }: { userID?: string }) {
               </div>
               <div className="h-4/12 flex items-center justify-center pt-4 pl-3 b-0">
                 <a
-                  href={`https://twitter.com/intent/tweet?text=%E7%A7%81%E3%81%AE%E6%AE%8B%E9%AB%98%E3%81%AF${moneyPoolSums
+                  href={`https://twitter.com/intent/tweet?text=${
+                    userID === session?.user.sub ? "%E7%A7%81" : userID
+                  }%E3%81%AE%E6%AE%8B%E9%AB%98%E3%81%AF${moneyPoolSums
                     .reduce(function (sum, moneypool) {
                       return sum + moneypool.sum;
                     }, 0)
                     .toLocaleString(undefined, {
                       maximumFractionDigits: 5,
-                    })}%E5%86%86%E3%81%A7%E3%81%99%EF%BC%81%0D%0AOpenChokin%E3%81%A7%E5%AE%B6%E8%A8%88%E7%B0%BF%E3%82%92%E5%85%A8%E4%B8%96%E7%95%8C%E3%81%AB%E5%85%AC%E9%96%8B%EF%BC%81&url=https://openchokin.walnuts.dev&hashtags=OpenChokina&via=walnuts1018`}
+                    })}%E5%86%86%E3%81%A7%E3%81%99%EF%BC%81%0D%0AOpenChokin%E3%81%A7%E5%AE%B6%E8%A8%88%E7%B0%BF%E3%82%92%E5%85%A8%E4%B8%96%E7%95%8C%E3%81%AB%E5%85%AC%E9%96%8B%EF%BC%81&url=https://openchokin.walnuts.dev/${userID}&hashtags=OpenChokina&via=walnuts1018`}
                   rel="nofollow"
                   target="_blank"
                   className="h-full font-Nunito text-xl"
@@ -218,21 +211,32 @@ function MypageContents({ userID }: { userID?: string }) {
                 {moneyPoolSums.map((moneyPool, index) => (
                   <SwiperSlide key={moneyPool.id} className="">
                     <div className="border-2 border-transparent h-full mx-2">
-                      <TransactionTable
-                        moneyPoolID={moneyPool.id}
-                        scroll={index === moneyPoolIndex}
-                      />
+                      {userID !== undefined ? (
+                        <TransactionTable
+                          moneyPoolID={moneyPool.id}
+                          scroll={index === moneyPoolIndex}
+                          userID={userID}
+                          reloadContext={tableReloadContext}
+                        />
+                      ) : (
+                        <div></div>
+                      )}
                     </div>
                   </SwiperSlide>
                 ))}
               </Swiper>
               <div className="flex justify-center items-center h-16 w-full">
-                <AddButton
-                  color={
-                    moneyPoolColors[moneyPoolIndex % moneyPoolColors.length]
-                  }
-                  moneyPoolID={moneyPoolSums[moneyPoolIndex].id}
-                />
+                {moneyPoolSums[moneyPoolIndex] !== undefined ? (
+                  <AddButton
+                    color={
+                      moneyPoolColors[moneyPoolIndex % moneyPoolColors.length]
+                    }
+                    moneyPoolID={moneyPoolSums[moneyPoolIndex].id}
+                    setReloadContext={setTableReloadContext}
+                  />
+                ) : (
+                  <div></div>
+                )}
               </div>
             </div>
           </div>
