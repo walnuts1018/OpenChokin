@@ -1,4 +1,4 @@
-const API_URL = "https://api-openchokin.walnuts.dev/v1";
+const apiurl = "https://api-openchokin.walnuts.dev/v1";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -7,7 +7,7 @@ const nextConfig = {
     return [
       {
         source: "/api/back/:path*",
-        destination: `${API_URL}/:path*`,
+        destination: `${apiurl}/:path*`,
       },
     ];
   },

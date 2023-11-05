@@ -881,10 +881,7 @@ function MoneyProviderItems({
               }}
               tabIndex={0}
             >
-              {providerBalance.toLocaleString(undefined, {
-                maximumFractionDigits: 5,
-              })}
-              円
+              {providerBalance} 円
             </div>
           )}
         </div>
