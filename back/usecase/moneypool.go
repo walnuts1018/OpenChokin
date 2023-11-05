@@ -10,16 +10,16 @@ import (
 )
 
 type MoneyPoolSummary struct {
-	ID   string
-	Name string
+	ID   string `json:"id"`
+	Name string `json:"name"`
 	// このIDのMoneyPoolに紐づくPlanではない実際の支払いの総額
-	Sum  float64
-	Type domain.PublicType
+	Sum  float64           `json:"sum"`
+	Type domain.PublicType `json:"type"`
 }
 
 // MoneyPoolsSummaryResponse
 type MoneyPoolsSummaryResponse struct {
-	Pools []MoneyPoolSummary
+	Pools []MoneyPoolSummary `json:"pools"`
 }
 
 // GetMoneyPoolsSummary メソッドは、指定されたuserIDのMoneyPoolsの要約を返します。
@@ -72,19 +72,19 @@ func (u *Usecase) GetMoneyPoolsSummary(userID string, loginUserID string) (Money
 }
 
 type PaymentSummary struct {
-	ID          string
-	Date        time.Time
-	Title       string
-	Amount      float64
-	Description string
-	IsPlanned   bool
+	ID          string    `json:"id"`
+	Date        time.Time `json:"date"`
+	Title       string    `json:"title"`
+	Amount      float64   `json:"amount"`
+	Description string    `json:"description"`
+	IsPlanned   bool      `json:"is_planned"`
 }
 type MoneyPoolResponse struct {
-	ID          string
-	Name        string
-	Description string
-	Type        domain.PublicType
-	Payments    []PaymentSummary
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Type        domain.PublicType `json:"type"`
+	Payments    []PaymentSummary  `json:"payments"`
 }
 
 func (u Usecase) GetMoneyPool(userID string, loginUserID string, moneyPoolID string) (MoneyPoolResponse, error) {

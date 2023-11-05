@@ -9,12 +9,12 @@ import (
 )
 
 type UserGroupMember struct {
-	ID string
+	ID string `json:"id"`
 }
 type UserGroupResponse struct {
-	ID      string `db:"id"`
-	Name    string `db:"name"`
-	Members []UserGroupMember
+	ID      string            `json:"id"`
+	Name    string            `json:"name"`
+	Members []UserGroupMember `json:"members"`
 }
 
 // AddUserGroup creates a new user group with the given members

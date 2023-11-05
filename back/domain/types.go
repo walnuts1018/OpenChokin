@@ -11,7 +11,7 @@ const (
 )
 
 type User struct {
-	ID string `db:"id"`
+	ID string `db:"id" json:"id"`
 }
 
 type UserGroup struct {

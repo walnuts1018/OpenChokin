@@ -8,12 +8,12 @@ import (
 )
 
 type MoneyProviderSummary struct {
-	ID      string
-	Name    string
-	Balance float64
+	ID      string  `json:"id"`
+	Name    string  `json:"name"`
+	Balance float64 `json:"balance"`
 }
 type MoneyProvidersSummaryResponse struct {
-	Providers []MoneyProviderSummary
+	Providers []MoneyProviderSummary `json:"provider"`
 }
 
 func (u Usecase) GetMoneyProvidersSummary(userID string) (MoneyProvidersSummaryResponse, error) {
@@ -44,10 +44,10 @@ func (u Usecase) GetMoneyProvidersSummary(userID string) (MoneyProvidersSummaryR
 }
 
 type MoneyProviderResponse struct {
-	ID        string
-	Name      string
-	CreatorID string
-	Balance   float64
+	ID        string  `json:"id"`
+	Name      string  `json:"name"`
+	CreatorID string  `json:"creator_id"`
+	Balance   float64 `json:"balance"`
 }
 
 func (u Usecase) UpdateMoneyProvider(userID string, moneyProviderID string, name string, balance float64) (MoneyProviderResponse, error) {
