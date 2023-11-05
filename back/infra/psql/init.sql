@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS money_pool (
     description TEXT,
     type VARCHAR(50) NOT NULL,
     owner_id BIGINT NOT NULL,
+    emoji VARCHAR(255) NOT NULL,
     FOREIGN KEY (owner_id) REFERENCES users(id)
 );
 

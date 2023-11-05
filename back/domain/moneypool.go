@@ -8,12 +8,12 @@ import (
 
 func (d *dbImpl) NewMoneyPool(moneyPool MoneyPool) (MoneyPool, error) {
 	// クエリ文字列で位置パラメータを使用します。
-	query := `INSERT INTO money_pool (name, description, type, owner_id)
-			  VALUES ($1, $2, $3, $4)
+	query := `INSERT INTO money_pool (name, description, type, owner_id, emoji)
+			  VALUES ($1, $2, $3, $4, $5)
 			  RETURNING id`
 	// QueryRowを使用してIDを取得します。
 	var returnedID int64
-	err := d.db.QueryRow(query, moneyPool.Name, moneyPool.Description, moneyPool.Type, moneyPool.OwnerID).Scan(&returnedID)
+	err := d.db.QueryRow(query, moneyPool.Name, moneyPool.Description, moneyPool.Type, moneyPool.OwnerID, moneyPool.Emoji).Scan(&returnedID)
 	if err != nil {
 		return MoneyPool{}, errors.Wrap(err, "新規MoneyPoolの作成とIDの返却に失敗しました")
 	}
@@ -51,13 +51,15 @@ func (d *dbImpl) UpdateMoneyPool(moneyPool MoneyPool) error {
 	}
 
 	var currentType string
+	// idに対して位置パラメータを使用して現在のタイプを取得します
 	err = tx.Get(&currentType, "SELECT type FROM money_pool WHERE id = $1", moneyPool.ID)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
-	if currentType == PublicTypeRestricted && moneyPool.Type != PublicTypeRestricted {
+	if currentType == "restricted" && moneyPool.Type != "restricted" {
+		// pool_idに対して位置パラメータを使用してrestricted_publication_scopeから削除します
 		_, err := tx.Exec("DELETE FROM restricted_publication_scope WHERE pool_id = $1", moneyPool.ID)
 		if err != nil {
 			tx.Rollback()
@@ -65,8 +67,10 @@ func (d *dbImpl) UpdateMoneyPool(moneyPool MoneyPool) error {
 		}
 	}
 
-	query := `UPDATE money_pool SET name = :name, description = :description, type = :type, owner_id = :owner_id WHERE id = :id`
-	_, err = tx.NamedExec(query, moneyPool)
+	// 名前付きパラメータを位置パラメータに置き換えたクエリを作成します
+	query := `UPDATE money_pool SET name = $2, description = $3, type = $4, owner_id = $5, emoji = $6 WHERE id = $1`
+	// Execを使用して更新を実行し、パラメータを順番にバインドします
+	_, err = tx.Exec(query, moneyPool.ID, moneyPool.Name, moneyPool.Description, moneyPool.Type, moneyPool.OwnerID, moneyPool.Emoji)
 	if err != nil {
 		tx.Rollback()
 		return err
