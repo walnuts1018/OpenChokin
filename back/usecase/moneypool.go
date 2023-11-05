@@ -13,8 +13,9 @@ type MoneyPoolSummary struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 	// このIDのMoneyPoolに紐づくPlanではない実際の支払いの総額
-	Sum  float64 `json:"sum"`
-	Type string  `json:"type"`
+	Sum   float64 `json:"sum"`
+	Type  string  `json:"type"`
+	Emoji string  `json:"emoji"`
 }
 
 // MoneyPoolsSummaryResponse
@@ -40,10 +41,11 @@ func (u *Usecase) GetMoneyPoolsSummary(userID string, loginUserID string) (Money
 				return MoneyPoolsSummaryResponse{}, balanceErr
 			}
 			pools = append(pools, MoneyPoolSummary{
-				ID:   pool.ID,
-				Name: pool.Name,
-				Sum:  sum,
-				Type: pool.Type,
+				ID:    pool.ID,
+				Name:  pool.Name,
+				Sum:   sum,
+				Type:  pool.Type,
+				Emoji: pool.Emoji,
 			})
 		} else if loginUserID != "" {
 			shared, shareErr := u.db.IsMoneyPoolSharedWithUser(pool.ID, loginUserID)
@@ -58,10 +60,11 @@ func (u *Usecase) GetMoneyPoolsSummary(userID string, loginUserID string) (Money
 					return MoneyPoolsSummaryResponse{}, balanceErr
 				}
 				pools = append(pools, MoneyPoolSummary{
-					ID:   pool.ID,
-					Name: pool.Name,
-					Sum:  sum,
-					Type: pool.Type,
+					ID:    pool.ID,
+					Name:  pool.Name,
+					Sum:   sum,
+					Type:  pool.Type,
+					Emoji: pool.Emoji,
 				})
 			}
 		}
@@ -84,6 +87,7 @@ type MoneyPoolResponse struct {
 	Name        string           `json:"name"`
 	Description string           `json:"description"`
 	Type        string           `json:"type"`
+	Emoji       string           `json:"emoji"`
 	Payments    []PaymentSummary `json:"payments"`
 }
 
@@ -144,11 +148,12 @@ func (u Usecase) GetMoneyPool(userID string, loginUserID string, moneyPoolID str
 		Description: moneyPool.Description,
 		Type:        string(moneyPool.Type),
 		Payments:    paymentSummaries,
+		Emoji:       moneyPool.Emoji,
 	}, nil
 }
 
 // AddMoneyPool adds a new money pool to the database and logs the process in Japanese.
-func (u Usecase) AddMoneyPool(userID string, name string, description string, publicType string) (MoneyPoolResponse, error) {
+func (u Usecase) AddMoneyPool(userID string, name string, description string, publicType string, emoji string) (MoneyPoolResponse, error) {
 	log.Printf("ユーザーID: %sによる新しいマネープールの作成を開始します。名前: %s", userID, name)
 
 	newMoneyPool := domain.MoneyPool{
@@ -156,6 +161,7 @@ func (u Usecase) AddMoneyPool(userID string, name string, description string, pu
 		Description: description,
 		Type:        publicType,
 		OwnerID:     userID,
+		Emoji:       emoji,
 	}
 
 	createdMoneyPool, err := u.db.NewMoneyPool(newMoneyPool)
@@ -171,11 +177,12 @@ func (u Usecase) AddMoneyPool(userID string, name string, description string, pu
 		Description: createdMoneyPool.Description,
 		Type:        string(createdMoneyPool.Type),
 		Payments:    []PaymentSummary{}, // No payments right after creation
+		Emoji:       createdMoneyPool.Emoji,
 	}, nil
 }
 
 // UpdateMoneyPool updates an existing money pool and logs the process in Japanese.
-func (u Usecase) UpdateMoneyPool(userID string, moneyPoolID string, name string, description string, publicationType string) (MoneyPoolResponse, error) {
+func (u Usecase) UpdateMoneyPool(userID string, moneyPoolID string, name string, description string, publicationType string, emoji string) (MoneyPoolResponse, error) {
 	log.Printf("ユーザーID: %sがマネープールID: %sを更新しようとしています。", userID, moneyPoolID)
 
 	existingMoneyPool, err := u.db.GetMoneyPool(moneyPoolID)
@@ -195,6 +202,7 @@ func (u Usecase) UpdateMoneyPool(userID string, moneyPoolID string, name string,
 		Description: description,
 		Type:        publicationType,
 		OwnerID:     userID,
+		Emoji:       emoji,
 	}
 
 	err = u.db.UpdateMoneyPool(updatedMoneyPool)
@@ -209,6 +217,7 @@ func (u Usecase) UpdateMoneyPool(userID string, moneyPoolID string, name string,
 		Name:        updatedMoneyPool.Name,
 		Description: updatedMoneyPool.Description,
 		Type:        string(updatedMoneyPool.Type),
+		Emoji:       updatedMoneyPool.Emoji,
 	}, nil
 }
 
