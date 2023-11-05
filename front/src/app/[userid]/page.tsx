@@ -1,3 +1,4 @@
+import { MypageComponent } from "../mypage/MypageComponent";
 export default function Page({ params }: { params: { userid: string } }) {
-  return <div>My Post: {params.userid}</div>;
+  return <MypageComponent userID={params.userid} />;
 }
