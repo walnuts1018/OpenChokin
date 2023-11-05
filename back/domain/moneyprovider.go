@@ -6,7 +6,7 @@ import (
 
 func (d *dbImpl) NewMoneyProvider(moneyProvider MoneyProvider) (MoneyProvider, error) {
 	// クエリ文字列で位置パラメータを使用します。
-	query := `INSERT INTO money_providers (name, creator_id, balance)
+	query := `INSERT INTO money_provider (name, creator_id, balance)
               VALUES ($1, $2, $3)
               RETURNING id`
 	// QueryRowを使用してSQLクエリを実行し、戻り値のIDを取得します。
@@ -41,7 +41,7 @@ func (d *dbImpl) UpdateMoneyProvider(moneyProvider MoneyProvider) error {
 }
 
 func (d *dbImpl) DeleteMoneyProvider(id string) error {
-	query := `DELETE FROM money_providers WHERE id = $1`
+	query := `DELETE FROM money_provider WHERE id = $1`
 	result, err := d.db.Exec(query, id)
 	if err != nil {
 		return fmt.Errorf("could not delete money provider: %v", err)
