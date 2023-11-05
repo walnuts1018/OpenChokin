@@ -41,7 +41,7 @@ export function TransactionTable({
         });
         if (res.ok) {
           const mpr: MoneyPoolResponse = await res.json();
-          setTransactions(mpr.Payments);
+          setTransactions(mpr.payments);
         }
       }
     };

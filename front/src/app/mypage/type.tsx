@@ -15,13 +15,13 @@ export type MoneyPoolResponse = {
   name: string;
   description: string;
   type: "private" | "public" | "restricted";
-  Payments: MoneyTransaction[];
+  payments: MoneyTransaction[];
 };
 
 export type MoneyPoolSum = {
   id: string;
   name: string;
-  Sum: number;
+  sum: number;
   type: "private" | "public" | "restricted";
   emoji: string;
 };

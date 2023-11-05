@@ -16,7 +16,7 @@ export function AddButton({
     new Date().toISOString().split("T")[0]
   );
   const [transactionTitle, setTransactionTitle] = useState("");
-  const [transactionAmount, setTransactionAmount] = useState(0);
+  const [transactionAmount, setTransactionAmount] = useState("");
 
   useEffect(() => {
     if (inputEl.current) {
@@ -42,6 +42,8 @@ export function AddButton({
       if (res.ok) {
         const data = await res.json();
         console.log(data);
+        setTransactionTitle("");
+        setTransactionAmount("");
       }
     }
   }
@@ -125,7 +127,7 @@ export function AddButton({
               }}
               value={transactionAmount}
               onChange={(e) => {
-                setTransactionAmount(Number(e.target.value));
+                setTransactionAmount(e.target.value);
               }}
               placeholder="金額"
             />
