@@ -9,7 +9,6 @@ import { useRef } from "react";
 import { useSession } from "next-auth/react";
 import Picker from "emoji-picker-react";
 import { EmojiClickData } from "emoji-picker-react";
-import { colors } from "@mui/material";
 import Image from "next/image";
 
 const tabColors = ["#f5c33f", "#31aedd"];
@@ -55,7 +54,8 @@ export function Balance({
   const [swiperIndex, setSwiperIndex] = useState(0);
   const [isAddMode, setIsAddMode] = useState(false);
   const [isAddMode2, setIsAddMode2] = useState(false);
-  const inputEl = useRef<HTMLInputElement>(null!);
+  const inputMoneyPoolEmojiElement = useRef<HTMLInputElement>(null!);
+  const inputMoneyPoolNameElement = useRef<HTMLInputElement>(null!);
   const [newMoneyPoolEmoji, setNewMoneyPoolEmoji] = useState("");
   const [newMoneyPoolName, setNewMoneyPoolName] = useState("");
 
@@ -67,6 +67,10 @@ export function Balance({
   const onEmojiClick = (emoji: EmojiClickData, event: MouseEvent) => {
     setNewMoneyPoolEmoji(emoji.emoji);
     setIsEmojiPicking(false);
+    if (inputMoneyPoolNameElement.current) {
+      console.debug("NewMoneyPool, focus to name");
+      inputMoneyPoolNameElement.current.focus();
+    }
   };
 
   async function addMoneyPool() {
@@ -193,10 +197,10 @@ export function Balance({
               <></>
             )}
           </Swiper>
-          <div className="flex justify-center items-center h-16 w-full ">
+          <div className="flex justify-center items-center h-16 w-full">
             {swiperIndex === 0 ? (
               <div
-                className="w-[95%] h-12 cursor-pointer z-50"
+                className="w-[95%] h-12 cursor-pointer"
                 onClick={() => {
                   setIsAddMode(true);
                 }}
@@ -218,6 +222,7 @@ export function Balance({
                     }}
                   >
                     <button
+                      type="button"
                       className="h-5/6"
                       style={{ color: tabColors[0] }}
                       tabIndex={0}
@@ -225,38 +230,40 @@ export function Balance({
                         e.preventDefault();
                         await addMoneyPool();
                       }}
+                      title="MoneyPoolを追加"
                     >
                       <Plus className="h-full w-full" />
                     </button>
                     <div className="w-11/12 flex gap-2 justify-start items-center p-1 relative">
                       {isEmojiPicking ? (
-                        <div className=" absolute bottom-0">
-                          <Picker onEmojiClick={onEmojiClick} />
-                        </div>
+                        <>
+                          <div className="absolute bottom-0 z-20 bg-white">
+                            <Picker onEmojiClick={onEmojiClick} />
+                          </div>
+                          <div
+                            className="h-screen w-screen fixed left-0 top-0 z-10 bg-transparent"
+                            onClick={() => {
+                              setIsEmojiPicking(false);
+                            }}
+                          />
+                        </>
                       ) : (
                         <></>
                       )}
                       <input
                         type="text"
-                        ref={inputEl}
+                        ref={inputMoneyPoolEmojiElement}
                         className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                          }
-                        }}
-                        value={newMoneyPoolEmoji}
-                        onClick={(e) => {
+                        defaultValue={newMoneyPoolEmoji}
+                        onClick={() => {
                           setIsEmojiPicking(true);
-                        }}
-                        onChange={(e) => {
-                          setNewMoneyPoolEmoji(e.target.value);
                         }}
                         placeholder="絵文字"
                       />
                       <input
                         type="text"
                         className="h-[80%] hover:border-0 focus:outline-none w-[75%]"
+                        ref={inputMoneyPoolNameElement}
                         onKeyDown={async (e) => {
                           if (e.key === "Enter") {
                             if (e.currentTarget) {
@@ -322,6 +329,7 @@ export function Balance({
                     }}
                   >
                     <button
+                      type="button"
                       className="h-5/6"
                       style={{ color: tabColors[1] }}
                       tabIndex={0}
@@ -329,13 +337,13 @@ export function Balance({
                         e.preventDefault();
                         await addMoneyProvider();
                       }}
+                      title="MoneyProviderを追加"
                     >
                       <Plus className="h-full w-full" />
                     </button>
                     <div className="w-11/12 flex gap-2 justify-start items-center p-1">
                       <input
                         type="text"
-                        ref={inputEl}
                         className="h-[80%] hover:border-0 focus:outline-none px-0"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -476,9 +484,9 @@ function BalanceItem({
       if (res.ok) {
         const data = await res.json();
         console.log(data);
+        setMoneyPoolEmoji(newValue);
       }
     }
-    setMoneyPoolEmoji(newValue);
   }
 
   async function onNameChange(newValue: string) {
@@ -541,51 +549,55 @@ function BalanceItem({
   }
 
   return (
-    <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-0 overflow-hidden border-b-2 border-gray-300">
+    <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-0 border-b-2 border-gray-300">
       <div className="w-10 h-10">
         {isEditEmoji ? (
-          <div className="w-full h-full">
-            <input
-              ref={inputName}
-              type="text"
-              className="w-full"
-              defaultValue={moneyPoolEmoji}
+          <>
+            <div
+              className="fixed z-20 flex justify-center items-center top-1/3 left-40 shadow-xl rounded-xl"
               onBlur={(fe) => {
-                onEmojiChange(fe.currentTarget.value);
                 if (!fe.currentTarget.contains(fe.relatedTarget)) {
                   setIsEditEmoji(false);
                 }
               }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  onEmojiChange(e.currentTarget.value);
+            >
+              <Picker
+                onEmojiClick={(emoji) => {
+                  onEmojiChange(emoji.emoji);
                   setIsEditEmoji(false);
-                  e.currentTarget.blur();
-                }
+                }}
+              />
+            </div>
+            <div
+              className="h-screen w-screen z-10 fixed bg-transparent left-0 top-0"
+              onClick={() => {
+                setIsEditEmoji(false);
               }}
-              autoFocus
-              tabIndex={0}
             />
-          </div>
+          </>
         ) : (
-          <div
-            className="cursor-pointer h-full"
-            onClick={() => {
-              setIsEditEmoji((v) => {
-                return !v;
-              });
-            }}
-            tabIndex={0}
-          >
-            {moneyPoolEmoji}
-          </div>
+          <></>
         )}
+        <div
+          className="cursor-pointer h-full"
+          onClick={() => {
+            if (!isEditEmoji) {
+              setIsEditEmoji(() => {
+                return true;
+              });
+            }
+          }}
+          tabIndex={0}
+        >
+          {moneyPoolEmoji}
+        </div>
       </div>
       <div className="flex items-center justify-between w-9/12">
         <div className="w-1/2 h-10 min-w-[10px]">
           {isEditName ? (
             <div className="w-full h-full">
               <input
+                aria-label="money pool name"
                 ref={inputName}
                 type="text"
                 className="w-full"
@@ -680,6 +692,7 @@ function BalanceItem({
           <div>このMoney Poolを公開してもよろしいですか？</div>
           <div className="flex justify-between gap-x-8">
             <button
+              type="button"
               className="bg-primary-default hover:bg-primary-dark rounded-full  text-white px-4 py-1 border-primary-default border-2 hover:border-primary-dark font-Noto font-semibold text-xl"
               onClick={() => {
                 setChangePublicCheckIsOpen(false);
@@ -692,6 +705,7 @@ function BalanceItem({
               公開する
             </button>
             <button
+              type="button"
               className="bg-white hover:bg-gray-100 rounded-full  text-primary-default px-4 py-1 border-primary-default border-2 font-Noto font-semibold text-xl"
               onClick={() => setChangePublicCheckIsOpen(false)}
             >
@@ -712,6 +726,7 @@ function BalanceItem({
           <div>Money Pool {moneyPool.name} を削除してもよろしいですか？</div>
           <div className="flex justify-between gap-x-8">
             <button
+              type="button"
               className="bg-primary-default hover:bg-primary-dark rounded-full  text-white px-4 py-1 border-primary-default border-2 hover:border-primary-dark font-Noto font-semibold text-xl"
               onClick={() => {
                 setDeleteCheckIsOpen(false);
@@ -724,6 +739,7 @@ function BalanceItem({
               削除する
             </button>
             <button
+              type="button"
               className="bg-white hover:bg-gray-100 rounded-full  text-primary-default px-4 py-1 border-primary-default border-2 font-Noto font-semibold text-xl"
               onClick={() => setDeleteCheckIsOpen(false)}
             >
@@ -805,6 +821,7 @@ function MoneyProviderItems({
           {isEditProviderName ? (
             <div className="w-full h-full">
               <input
+                aria-label="money provider name"
                 ref={inputProviderName}
                 type="text"
                 className="w-full"
@@ -847,6 +864,7 @@ function MoneyProviderItems({
           {isEditBalance ? (
             <div className="w-full h-full">
               <input
+                aria-label="money provider balance"
                 ref={inputBalance}
                 type="text"
                 className="w-full"

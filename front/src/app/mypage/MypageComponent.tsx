@@ -11,6 +11,7 @@ import Image from "next/image";
 import { AddButton } from "./AddButton";
 import { MoneyPoolSum } from "./type";
 import { createContext } from "react";
+import { useCallback } from "react";
 
 export const TransactionContext = createContext({});
 
@@ -55,71 +56,80 @@ function MypageContents({ userID }: { userID?: string }) {
     userID = session?.user.sub;
   }
 
-  useEffect(() => {
-    const getMoneyPools = async () => {
-      console.log("start getMoneyPools by", userID);
-      if (userID) {
-        const authHeader =
-          userID === session?.user.sub ? `Bearer ${session.user.idToken}` : "";
-        const res = await fetch(
-          `/api/back/moneypools?type=summary&user_id=${userID}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: authHeader,
-            },
-          }
-        );
-        console.log("getMoneyPools res", res);
-        if (res.ok) {
-          const json = await res.json();
-          console.log("getMoneyPools json raw", json);
-          if (json.pools !== null && json.pools !== undefined) {
-            const mps: MoneyPoolSum[] = json.pools as MoneyPoolSum[];
-            setMoneyPoolSums(mps);
-          }
-        } else {
-          console.log("getMoneyPools error", res);
-        }
-      }
-    };
-
-    const getMoneyProviders = async () => {
-      if (session && session?.user && userID) {
-        const authHeader =
-          userID === session?.user.sub ? `Bearer ${session.user.idToken}` : "";
-        const res = await fetch(`/api/back/moneyproviders?type=summary`, {
+  const getMoneyPools = useCallback(async () => {
+    console.log("start getMoneyPools by", userID);
+    if (userID) {
+      const authHeader =
+        userID === session?.user.sub ? `Bearer ${session.user.idToken}` : "";
+      const res = await fetch(
+        `/api/back/moneypools?type=summary&user_id=${userID}`,
+        {
           method: "GET",
           headers: {
             Authorization: authHeader,
           },
-        });
-        if (res.ok) {
-          const json = await res.json();
-          console.log(json);
-          if (json.provider !== null && json.provider !== undefined) {
-            const provider = json.provider;
-            const mps: MoneyProviderSum[] = provider.map(
-              (p: { id: string; name: string; balance: Number }) => {
-                return {
-                  id: p.id,
-                  name: p.name,
-                  balance: p.balance.toLocaleString(undefined, {
-                    maximumFractionDigits: 5,
-                  }),
-                };
-              }
-            );
+        }
+      );
+      console.log("getMoneyPools res", res);
+      if (res.ok) {
+        const json = await res.json();
+        console.log("getMoneyPools json raw", json);
+        if (json.pools !== null && json.pools !== undefined) {
+          const mps: MoneyPoolSum[] = json.pools as MoneyPoolSum[];
+          setMoneyPoolSums(mps);
+        }
+      } else {
+        console.log("getMoneyPools error", res);
+      }
+    }
+  }, [userID, session]);
 
-            setMoneyProviders(mps);
-          }
+  const getMoneyProviders = useCallback(async () => {
+    if (session && session?.user && userID) {
+      const authHeader =
+        userID === session?.user.sub ? `Bearer ${session.user.idToken}` : "";
+      const res = await fetch(`/api/back/moneyproviders?type=summary`, {
+        method: "GET",
+        headers: {
+          Authorization: authHeader,
+        },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        console.log(json);
+        if (json.provider !== null && json.provider !== undefined) {
+          const provider = json.provider;
+          const mps: MoneyProviderSum[] = provider.map(
+            (p: { id: string; name: string; balance: Number }) => {
+              return {
+                id: p.id,
+                name: p.name,
+                balance: p.balance.toLocaleString(undefined, {
+                  maximumFractionDigits: 5,
+                }),
+              };
+            }
+          );
+
+          setMoneyProviders(mps);
         }
       }
-    };
+    }
+  }, [session, userID]);
 
+  useEffect(() => {
     getMoneyPools();
     getMoneyProviders();
-  }, [session, userID]);
+  }, [getMoneyPools, getMoneyProviders]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      getMoneyPools();
+      getMoneyProviders();
+    }, 1000 * 60);
+
+    return () => clearInterval(interval);
+  }, [getMoneyPools, getMoneyProviders]);
 
   if (userID !== undefined) {
     console.log(typeof moneyPoolSums);
@@ -154,7 +164,7 @@ function MypageContents({ userID }: { userID?: string }) {
                     }, 0)
                     .toLocaleString(undefined, {
                       maximumFractionDigits: 5,
-                    })}%E5%86%86%E3%81%A7%E3%81%99%EF%BC%81%0D%0AOpenChokin%E3%81%A7%E5%AE%B6%E8%A8%88%E7%B0%BF%E3%82%92%E5%85%A8%E4%B8%96%E7%95%8C%E3%81%AB%E5%85%AC%E9%96%8B%EF%BC%81&url=https://openchokin.walnuts.dev/${userID}&hashtags=OpenChokina&via=walnuts1018`}
+                    })}%E5%86%86%E3%81%A7%E3%81%99%EF%BC%81%0D%0AOpenChokin%E3%81%A7%E5%AE%B6%E8%A8%88%E7%B0%BF%E3%82%92%E5%85%A8%E4%B8%96%E7%95%8C%E3%81%AB%E5%85%AC%E9%96%8B%EF%BC%81&url=https://openchokin.walnuts.dev/${userID}&hashtags=OpenChokin&via=walnuts1018`}
                   rel="nofollow"
                   target="_blank"
                   className="h-full font-Nunito text-xl"
