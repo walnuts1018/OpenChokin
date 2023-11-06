@@ -26,6 +26,7 @@ export const authOptions: NextAuthOptions = {
       isNewUser?: boolean;
       session?: any;
     }) => {
+      //console.log("JWT Callback token", token);
       if (user) {
         token.role = user.role;
       }
@@ -40,6 +41,7 @@ export const authOptions: NextAuthOptions = {
           token.idToken = id_token;
           token.refreshToken = refresh_token;
           token.expiresAt = expires_at;
+          console.log("Refreshed token");
         } catch (e) {
           console.error(e);
           return { ...token, error: "RefreshAccessTokenError" as const }
@@ -76,8 +78,9 @@ const refreshIDToken = async (refreshToken: string) => {
     }),
   });
   const data = await response.json();
+  //console.log("Data:", data);
   if (!response.ok) {
-    throw new Error(data.error_description || "Unknown error");
+    throw new Error(data.error_description || data.error || "Unknown error");
   }
 
   return {
