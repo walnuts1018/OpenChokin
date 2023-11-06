@@ -156,7 +156,7 @@ export function Balance({
               const swiperInstance = swiper;
               setSwiper(swiperInstance);
             }}
-            className="flex w-full h-[90%] z-20"
+            className="flex w-full h-[90%]"
           >
             <SwiperSlide className="">
               <ThemeProvider theme={theme1}>
@@ -197,10 +197,10 @@ export function Balance({
               <></>
             )}
           </Swiper>
-          <div className="flex justify-center items-center h-16 w-full ">
+          <div className="flex justify-center items-center h-16 w-full">
             {swiperIndex === 0 ? (
               <div
-                className="w-[95%] h-12 cursor-pointer z-0"
+                className="w-[95%] h-12 cursor-pointer"
                 onClick={() => {
                   setIsAddMode(true);
                 }}
@@ -254,8 +254,8 @@ export function Balance({
                         type="text"
                         ref={inputMoneyPoolEmojiElement}
                         className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
-                        value={newMoneyPoolEmoji}
-                        onClick={(e) => {
+                        defaultValue={newMoneyPoolEmoji}
+                        onClick={() => {
                           setIsEmojiPicking(true);
                         }}
                         placeholder="絵文字"
@@ -305,7 +305,7 @@ export function Balance({
               </div>
             ) : (
               <div
-                className="w-[95%] h-12 cursor-pointer z-0"
+                className="w-[95%] h-12 cursor-pointer"
                 onClick={() => {
                   setIsAddMode2(true);
                 }}
@@ -484,9 +484,9 @@ function BalanceItem({
       if (res.ok) {
         const data = await res.json();
         console.log(data);
+        setMoneyPoolEmoji(newValue);
       }
     }
-    setMoneyPoolEmoji(newValue);
   }
 
   async function onNameChange(newValue: string) {
@@ -552,9 +552,9 @@ function BalanceItem({
     <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-0 border-b-2 border-gray-300">
       <div className="w-10 h-10">
         {isEditEmoji ? (
-          <div className="w-full h-full fixed">
+          <>
             <div
-              className="absolute left-0 z-20 bg-white"
+              className="fixed z-20 flex justify-center items-center top-1/3 left-40 shadow-xl rounded-xl"
               onBlur={(fe) => {
                 if (!fe.currentTarget.contains(fe.relatedTarget)) {
                   setIsEditEmoji(false);
@@ -569,25 +569,28 @@ function BalanceItem({
               />
             </div>
             <div
-              className="h-screen w-screen z-10 fixed bg-transparent"
+              className="h-screen w-screen z-10 fixed bg-transparent left-0 top-0"
               onClick={() => {
                 setIsEditEmoji(false);
               }}
             />
-          </div>
+          </>
         ) : (
-          <div
-            className="cursor-pointer h-full"
-            onClick={() => {
-              setIsEditEmoji((v) => {
-                return !v;
-              });
-            }}
-            tabIndex={0}
-          >
-            {moneyPoolEmoji}
-          </div>
+          <></>
         )}
+        <div
+          className="cursor-pointer h-full"
+          onClick={() => {
+            if (!isEditEmoji) {
+              setIsEditEmoji(() => {
+                return true;
+              });
+            }
+          }}
+          tabIndex={0}
+        >
+          {moneyPoolEmoji}
+        </div>
       </div>
       <div className="flex items-center justify-between w-9/12">
         <div className="w-1/2 h-10 min-w-[10px]">
