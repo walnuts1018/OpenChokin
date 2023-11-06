@@ -55,7 +55,8 @@ export function Balance({
   const [swiperIndex, setSwiperIndex] = useState(0);
   const [isAddMode, setIsAddMode] = useState(false);
   const [isAddMode2, setIsAddMode2] = useState(false);
-  const inputEl = useRef<HTMLInputElement>(null!);
+  const inputMoneyPoolEmojiElement = useRef<HTMLInputElement>(null!);
+  const inputMoneyPoolNameElement = useRef<HTMLInputElement>(null!);
   const [newMoneyPoolEmoji, setNewMoneyPoolEmoji] = useState("");
   const [newMoneyPoolName, setNewMoneyPoolName] = useState("");
 
@@ -67,6 +68,10 @@ export function Balance({
   const onEmojiClick = (emoji: EmojiClickData, event: MouseEvent) => {
     setNewMoneyPoolEmoji(emoji.emoji);
     setIsEmojiPicking(false);
+    if (inputMoneyPoolNameElement.current) {
+      console.debug("NewMoneyPool, focus to name");
+      inputMoneyPoolNameElement.current.focus();
+    }
   };
 
   async function addMoneyPool() {
@@ -230,33 +235,34 @@ export function Balance({
                     </button>
                     <div className="w-11/12 flex gap-2 justify-start items-center p-1 relative">
                       {isEmojiPicking ? (
-                        <div className=" absolute bottom-0">
-                          <Picker onEmojiClick={onEmojiClick} />
-                        </div>
+                        <>
+                          <div className=" absolute bottom-0 z-10">
+                            <Picker onEmojiClick={onEmojiClick} />
+                          </div>
+                          <div
+                            className="h-screen w-screen fixed left-0 top-0 z-0"
+                            onClick={() => {
+                              setIsEmojiPicking(false);
+                            }}
+                          />
+                        </>
                       ) : (
                         <></>
                       )}
                       <input
                         type="text"
-                        ref={inputEl}
+                        ref={inputMoneyPoolEmojiElement}
                         className="h-[80%] hover:border-0 focus:outline-none w-[15%] px-0"
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                          }
-                        }}
                         value={newMoneyPoolEmoji}
                         onClick={(e) => {
                           setIsEmojiPicking(true);
-                        }}
-                        onChange={(e) => {
-                          setNewMoneyPoolEmoji(e.target.value);
                         }}
                         placeholder="絵文字"
                       />
                       <input
                         type="text"
                         className="h-[80%] hover:border-0 focus:outline-none w-[75%]"
+                        ref={inputMoneyPoolNameElement}
                         onKeyDown={async (e) => {
                           if (e.key === "Enter") {
                             if (e.currentTarget) {
@@ -335,7 +341,6 @@ export function Balance({
                     <div className="w-11/12 flex gap-2 justify-start items-center p-1">
                       <input
                         type="text"
-                        ref={inputEl}
                         className="h-[80%] hover:border-0 focus:outline-none px-0"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
@@ -542,29 +547,29 @@ function BalanceItem({
 
   return (
     <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-0 overflow-hidden border-b-2 border-gray-300">
-      <div className="w-10 h-10">
+      <div className="w-10 h-10 overflow-visible">
         {isEditEmoji ? (
-          <div className="w-full h-full">
-            <input
-              ref={inputName}
-              type="text"
-              className="w-full"
-              defaultValue={moneyPoolEmoji}
+          <div className="w-full h-full fixed">
+            <div
+              className="absolute left-0 z-20"
               onBlur={(fe) => {
-                onEmojiChange(fe.currentTarget.value);
                 if (!fe.currentTarget.contains(fe.relatedTarget)) {
                   setIsEditEmoji(false);
                 }
               }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  onEmojiChange(e.currentTarget.value);
+            >
+              <Picker
+                onEmojiClick={(emoji) => {
+                  onEmojiChange(emoji.emoji);
                   setIsEditEmoji(false);
-                  e.currentTarget.blur();
-                }
+                }}
+              />
+            </div>
+            <div
+              className="h-screen w-screen z-10 fixed"
+              onClick={() => {
+                setIsEditEmoji(false);
               }}
-              autoFocus
-              tabIndex={0}
             />
           </div>
         ) : (

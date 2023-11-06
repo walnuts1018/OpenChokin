@@ -154,7 +154,7 @@ function MypageContents({ userID }: { userID?: string }) {
                     }, 0)
                     .toLocaleString(undefined, {
                       maximumFractionDigits: 5,
-                    })}%E5%86%86%E3%81%A7%E3%81%99%EF%BC%81%0D%0AOpenChokin%E3%81%A7%E5%AE%B6%E8%A8%88%E7%B0%BF%E3%82%92%E5%85%A8%E4%B8%96%E7%95%8C%E3%81%AB%E5%85%AC%E9%96%8B%EF%BC%81&url=https://openchokin.walnuts.dev/${userID}&hashtags=OpenChokina&via=walnuts1018`}
+                    })}%E5%86%86%E3%81%A7%E3%81%99%EF%BC%81%0D%0AOpenChokin%E3%81%A7%E5%AE%B6%E8%A8%88%E7%B0%BF%E3%82%92%E5%85%A8%E4%B8%96%E7%95%8C%E3%81%AB%E5%85%AC%E9%96%8B%EF%BC%81&url=https://openchokin.walnuts.dev/${userID}&hashtags=OpenChokin&via=walnuts1018`}
                   rel="nofollow"
                   target="_blank"
                   className="h-full font-Nunito text-xl"
