@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  ImageBuild:
+  BackImageBuild:
     name: Build openchokin/back Custom Docker Image
     runs-on: ubuntu-latest
     steps:
@@ -62,7 +62,7 @@ jobs:
   SucceessNotification:
     if: ${{ success() }}
     name: Send Success Message
-    needs: [ImageBuild]
+    needs: [BackImageBuild]
     runs-on: ubuntu-latest
     steps:
       - name: Send Message to Slack
@@ -80,7 +80,7 @@ jobs:
   FailureAlert:
     if: ${{ failure() }}
     name: Notify failure
-    needs: [ImageBuild]
+    needs: [BackImageBuild]
     runs-on: ubuntu-latest
     steps:
       - name: Send Failure Alert to Slack

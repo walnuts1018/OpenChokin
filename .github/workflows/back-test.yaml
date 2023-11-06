@@ -6,8 +6,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Test
+  backend-tests:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -31,6 +30,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
+        if: github.ref == 'refs/heads/main'
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: cover.out
