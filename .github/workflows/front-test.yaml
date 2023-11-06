@@ -1,7 +1,7 @@
 name: Frontend Tests
 on:
   workflow_dispatch:
-  push:
+  pull_request:
 jobs:
   frontend-buildtests:
     runs-on: ubuntu-latest
