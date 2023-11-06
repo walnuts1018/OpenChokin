@@ -9,7 +9,6 @@ import { useRef } from "react";
 import { useSession } from "next-auth/react";
 import Picker from "emoji-picker-react";
 import { EmojiClickData } from "emoji-picker-react";
-import { colors } from "@mui/material";
 import Image from "next/image";
 
 const tabColors = ["#f5c33f", "#31aedd"];
@@ -223,6 +222,7 @@ export function Balance({
                     }}
                   >
                     <button
+                      type="button"
                       className="h-5/6"
                       style={{ color: tabColors[0] }}
                       tabIndex={0}
@@ -230,6 +230,7 @@ export function Balance({
                         e.preventDefault();
                         await addMoneyPool();
                       }}
+                      title="MoneyPoolを追加"
                     >
                       <Plus className="h-full w-full" />
                     </button>
@@ -328,6 +329,7 @@ export function Balance({
                     }}
                   >
                     <button
+                      type="button"
                       className="h-5/6"
                       style={{ color: tabColors[1] }}
                       tabIndex={0}
@@ -335,6 +337,7 @@ export function Balance({
                         e.preventDefault();
                         await addMoneyProvider();
                       }}
+                      title="MoneyProviderを追加"
                     >
                       <Plus className="h-full w-full" />
                     </button>
@@ -591,6 +594,7 @@ function BalanceItem({
           {isEditName ? (
             <div className="w-full h-full">
               <input
+                aria-label="money pool name"
                 ref={inputName}
                 type="text"
                 className="w-full"
@@ -685,6 +689,7 @@ function BalanceItem({
           <div>このMoney Poolを公開してもよろしいですか？</div>
           <div className="flex justify-between gap-x-8">
             <button
+              type="button"
               className="bg-primary-default hover:bg-primary-dark rounded-full  text-white px-4 py-1 border-primary-default border-2 hover:border-primary-dark font-Noto font-semibold text-xl"
               onClick={() => {
                 setChangePublicCheckIsOpen(false);
@@ -697,6 +702,7 @@ function BalanceItem({
               公開する
             </button>
             <button
+              type="button"
               className="bg-white hover:bg-gray-100 rounded-full  text-primary-default px-4 py-1 border-primary-default border-2 font-Noto font-semibold text-xl"
               onClick={() => setChangePublicCheckIsOpen(false)}
             >
@@ -717,6 +723,7 @@ function BalanceItem({
           <div>Money Pool {moneyPool.name} を削除してもよろしいですか？</div>
           <div className="flex justify-between gap-x-8">
             <button
+              type="button"
               className="bg-primary-default hover:bg-primary-dark rounded-full  text-white px-4 py-1 border-primary-default border-2 hover:border-primary-dark font-Noto font-semibold text-xl"
               onClick={() => {
                 setDeleteCheckIsOpen(false);
@@ -729,6 +736,7 @@ function BalanceItem({
               削除する
             </button>
             <button
+              type="button"
               className="bg-white hover:bg-gray-100 rounded-full  text-primary-default px-4 py-1 border-primary-default border-2 font-Noto font-semibold text-xl"
               onClick={() => setDeleteCheckIsOpen(false)}
             >
@@ -810,6 +818,7 @@ function MoneyProviderItems({
           {isEditProviderName ? (
             <div className="w-full h-full">
               <input
+                aria-label="money provider name"
                 ref={inputProviderName}
                 type="text"
                 className="w-full"
@@ -852,6 +861,7 @@ function MoneyProviderItems({
           {isEditBalance ? (
             <div className="w-full h-full">
               <input
+                aria-label="money provider balance"
                 ref={inputBalance}
                 type="text"
                 className="w-full"
