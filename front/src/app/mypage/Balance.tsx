@@ -156,7 +156,7 @@ export function Balance({
               const swiperInstance = swiper;
               setSwiper(swiperInstance);
             }}
-            className="flex w-full h-[90%]"
+            className="flex w-full h-[90%] z-20"
           >
             <SwiperSlide className="">
               <ThemeProvider theme={theme1}>
@@ -200,7 +200,7 @@ export function Balance({
           <div className="flex justify-center items-center h-16 w-full ">
             {swiperIndex === 0 ? (
               <div
-                className="w-[95%] h-12 cursor-pointer z-50"
+                className="w-[95%] h-12 cursor-pointer z-0"
                 onClick={() => {
                   setIsAddMode(true);
                 }}
@@ -237,11 +237,11 @@ export function Balance({
                     <div className="w-11/12 flex gap-2 justify-start items-center p-1 relative">
                       {isEmojiPicking ? (
                         <>
-                          <div className=" absolute bottom-0 z-10">
+                          <div className="absolute bottom-0 z-20 bg-white">
                             <Picker onEmojiClick={onEmojiClick} />
                           </div>
                           <div
-                            className="h-screen w-screen fixed left-0 top-0 z-0"
+                            className="h-screen w-screen fixed left-0 top-0 z-10 bg-transparent"
                             onClick={() => {
                               setIsEmojiPicking(false);
                             }}
@@ -305,7 +305,7 @@ export function Balance({
               </div>
             ) : (
               <div
-                className="w-[95%] h-12 cursor-pointer"
+                className="w-[95%] h-12 cursor-pointer z-0"
                 onClick={() => {
                   setIsAddMode2(true);
                 }}
@@ -549,12 +549,12 @@ function BalanceItem({
   }
 
   return (
-    <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-0 overflow-hidden border-b-2 border-gray-300">
-      <div className="w-10 h-10 overflow-visible">
+    <div className="flex gap-4 font-Noto font-normal py-2 text-4xl items-center justify-between px-0 border-b-2 border-gray-300">
+      <div className="w-10 h-10">
         {isEditEmoji ? (
           <div className="w-full h-full fixed">
             <div
-              className="absolute left-0 z-20"
+              className="absolute left-0 z-20 bg-white"
               onBlur={(fe) => {
                 if (!fe.currentTarget.contains(fe.relatedTarget)) {
                   setIsEditEmoji(false);
@@ -569,7 +569,7 @@ function BalanceItem({
               />
             </div>
             <div
-              className="h-screen w-screen z-10 fixed"
+              className="h-screen w-screen z-10 fixed bg-transparent"
               onClick={() => {
                 setIsEditEmoji(false);
               }}
