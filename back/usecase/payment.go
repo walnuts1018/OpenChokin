@@ -9,7 +9,7 @@ import (
 )
 
 // AddNewPayment adds a new payment to the specified MoneyPool for a given user.
-func (u *Usecase) AddNewPayment(userID string, moneyPoolID string, title string, amount float64, description string, isPlanned bool) error {
+func (u *Usecase) AddNewPayment(userID string, moneyPoolID string, Date time.Time, title string, amount float64, description string, isPlanned bool) error {
 	log.Printf("ユーザーID %s のための新規支払い追加を開始します。マネープールID: %s, タイトル: %s", userID, moneyPoolID, title)
 	// Retrieve the MoneyPool to ensure it exists and belongs to the user
 	moneyPool, err := u.db.GetMoneyPool(moneyPoolID)
@@ -26,7 +26,7 @@ func (u *Usecase) AddNewPayment(userID string, moneyPoolID string, title string,
 	payment := domain.Payment{
 		ID:          "",
 		MoneyPoolID: moneyPoolID,
-		Date:        time.Now(), // Use current time for payment date
+		Date:        Date,
 		Title:       title,
 		Amount:      amount,
 		Description: description,

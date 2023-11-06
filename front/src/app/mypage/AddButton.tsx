@@ -39,6 +39,7 @@ export function AddButton({
           amount: Number(transactionAmount),
           description: "",
           is_planned: false,
+          date: transactionDate,
         }),
       });
       if (res.ok) {

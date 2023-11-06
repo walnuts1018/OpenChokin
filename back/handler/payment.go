@@ -61,13 +61,20 @@ func postPayment(c *gin.Context) {
 		Amount      float64 `json:"amount"`
 		Description string  `json:"description"`
 		IsPlanned   bool    `json:"is_planned"`
+		Date        string  `json:"date"`
 	}
 	if err := c.BindJSON(&paymentRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	err := uc.AddNewPayment(userID, moneyPoolID, paymentRequest.Title, paymentRequest.Amount, paymentRequest.Description, paymentRequest.IsPlanned)
+	date, err := time.Parse("2006-01-02", paymentRequest.Date)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date format, should be YYYY-MM-DD"})
+		return
+	}
+
+	err = uc.AddNewPayment(userID, moneyPoolID, date, paymentRequest.Title, paymentRequest.Amount, paymentRequest.Description, paymentRequest.IsPlanned)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
