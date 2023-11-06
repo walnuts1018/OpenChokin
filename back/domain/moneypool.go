@@ -3,14 +3,15 @@ package domain
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/pkg/errors"
 )
 
 func (d *dbImpl) NewMoneyPool(moneyPool MoneyPool) (MoneyPool, error) {
 	// クエリ文字列で位置パラメータを使用します。
-	query := `INSERT INTO money_pool (name, description, type, owner_id, emoji)
-			  VALUES ($1, $2, $3, $4, $5)
+	query := `INSERT INTO money_pool (name, description, type, owner_id, emoji, is_deleted)
+			  VALUES ($1, $2, $3, $4, $5, false)
 			  RETURNING id`
 	// QueryRowを使用してIDを取得します。
 	var returnedID int64
@@ -27,7 +28,7 @@ func (d *dbImpl) NewMoneyPool(moneyPool MoneyPool) (MoneyPool, error) {
 
 func (d *dbImpl) GetMoneyPool(id string) (MoneyPool, error) {
 	var moneyPool MoneyPool
-	query := `SELECT * FROM money_pool WHERE id = $1`
+	query := `SELECT * FROM money_pool WHERE id = $1 AND is_deleted = false`
 	err := d.db.Get(&moneyPool, query, id)
 	if err != nil {
 		return MoneyPool{}, fmt.Errorf("could not find money pool: %v", err)
@@ -37,7 +38,7 @@ func (d *dbImpl) GetMoneyPool(id string) (MoneyPool, error) {
 
 func (d *dbImpl) GetMoneyPoolsByUserID(userID string) ([]MoneyPool, error) {
 	var moneyPools []MoneyPool
-	query := `SELECT * FROM money_pool WHERE owner_id = $1`
+	query := `SELECT * FROM money_pool WHERE owner_id = $1 AND is_deleted = false`
 	err := d.db.Select(&moneyPools, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("could not find money pools for user: %v", err)
@@ -52,15 +53,15 @@ func (d *dbImpl) UpdateMoneyPool(moneyPool MoneyPool) error {
 	}
 
 	var currentType string
-	// idに対して位置パラメータを使用して現在のタイプを取得します
+	// 公開タイプを取得
 	err = tx.Get(&currentType, "SELECT type FROM money_pool WHERE id = $1", moneyPool.ID)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
+	// if the current type is restricted and the new type is not restricted, delete the restricted publication scope table
 	if currentType == "restricted" && moneyPool.Type != "restricted" {
-		// pool_idに対して位置パラメータを使用してrestricted_publication_scopeから削除します
 		_, err := tx.Exec("DELETE FROM restricted_publication_scope WHERE pool_id = $1", moneyPool.ID)
 		if err != nil {
 			tx.Rollback()
@@ -116,8 +117,8 @@ func (d *dbImpl) ShareMoneyPoolWithUserGroups(moneyPoolID string, shareUserGroup
 }
 
 func (d *dbImpl) DeleteMoneyPool(id string) error {
-	query := `DELETE FROM money_pool WHERE id = $1`
-	result, err := d.db.Exec(query, id)
+	query := `UPDATE money_pool SET is_deleted = true, deleted_at = $2 WHERE id = $1`
+	result, err := d.db.Exec(query, id, time.Now())
 	if err != nil {
 		return fmt.Errorf("could not delete money pool: %v", err)
 	}
