@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"time"
 
@@ -45,14 +46,14 @@ type UserGroup struct {
 }
 
 type MoneyPool struct {
-	ID          string    `db:"id"`
-	Name        string    `db:"name"`
-	Description string    `db:"description"`
-	Type        string    `db:"type"`
-	OwnerID     string    `db:"owner_id"`
-	Emoji       string    `db:"emoji"`
-	IsDeleted   bool      `db:"is_deleted"`
-	DeletedAt   time.Time `db:"deleted_at"`
+	ID          string       `db:"id"`
+	Name        string       `db:"name"`
+	Description string       `db:"description"`
+	Type        string       `db:"type"`
+	OwnerID     string       `db:"owner_id"`
+	Emoji       string       `db:"emoji"`
+	IsDeleted   bool         `db:"is_deleted"`
+	DeletedAt   sql.NullTime `db:"deleted_at"`
 }
 
 type MoneyProvider struct {
