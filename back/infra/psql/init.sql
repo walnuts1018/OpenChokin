@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS money_pool (
     owner_id BIGINT NOT NULL,
     emoji VARCHAR(255) NOT NULL,
     is_deleted BOOLEAN NOT NULL,
+    deleted_at DATE,
     FOREIGN KEY (owner_id) REFERENCES users(id)
 );
 

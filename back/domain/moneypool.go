@@ -3,6 +3,7 @@ package domain
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/pkg/errors"
 )
@@ -116,8 +117,8 @@ func (d *dbImpl) ShareMoneyPoolWithUserGroups(moneyPoolID string, shareUserGroup
 }
 
 func (d *dbImpl) DeleteMoneyPool(id string) error {
-	query := `UPDATE money_pool SET is_deleted = true WHERE id = $1`
-	result, err := d.db.Exec(query, id)
+	query := `UPDATE money_pool SET is_deleted = true, deleted_at = $2 WHERE id = $1`
+	result, err := d.db.Exec(query, id, time.Now())
 	if err != nil {
 		return fmt.Errorf("could not delete money pool: %v", err)
 	}
