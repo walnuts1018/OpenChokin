@@ -41,7 +41,6 @@ export const authOptions: NextAuthOptions = {
       isNewUser?: boolean;
       session?: any;
     }) => {
-      console.debug("JWT Callback", token);
       if (user) {
         token.role = user.role;
       }
@@ -54,7 +53,6 @@ export const authOptions: NextAuthOptions = {
         lock.acquire("refreshToken", async function (done) {
           try {
             const cachedJsonData = await redis.get("openchokin-" + token.sub as string);
-            console.debug("Cached data", cachedJsonData);
             if (cachedJsonData) {
               const cachedData = JSON.parse(cachedJsonData);
               const iv = Buffer.from(cachedData.iv, 'hex');
@@ -86,7 +84,6 @@ export const authOptions: NextAuthOptions = {
               expiresAt: token.expiresAt,
               iv: iv.toString('hex'),
             })
-            console.debug("New cached data", newCachedData);
             await redis.set("openchokin-" + token.sub as string, newCachedData, "EX", 60 * 60 * 24 * 30);
           } catch (e) {
             console.error("Error refreshing token", e);
@@ -103,7 +100,6 @@ export const authOptions: NextAuthOptions = {
       session.user.role = token.role;
       session.user.idToken = token.idToken;
       session.user.sub = token.sub;
-      //console.debug(session);
       return session;
     },
   },
