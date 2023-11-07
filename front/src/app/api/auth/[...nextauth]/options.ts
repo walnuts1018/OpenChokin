@@ -44,14 +44,14 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role;
       }
-      if (account) {
-        token.refreshToken = account.refresh_token;
-        token.idToken = account.id_token;
-        token.expiresAt = account.expires_at;
-      }
-      else if (new Date() > new Date(token.expiresAt as number * 1000)) {
-        lock.acquire("refreshToken", async function (done) {
-          try {
+      lock.acquire("refreshToken" + user.sub, async function (done) {
+        try {
+          if (account) {
+            token.refreshToken = account.refresh_token;
+            token.idToken = account.id_token;
+            token.expiresAt = account.expires_at;
+          }
+          else if (new Date() > new Date(token.expiresAt as number * 1000)) {
             const cachedJsonData = await redis.get("openchokin-" + token.sub as string);
             if (cachedJsonData) {
               const cachedData = JSON.parse(cachedJsonData);
@@ -74,26 +74,25 @@ export const authOptions: NextAuthOptions = {
                 token.expiresAt = cachedExpiresAt;
               }
             }
-
-            const iv = crypto.randomBytes(16);
-            const cipher = crypto.createCipheriv('aes-256-cbc', cacheKey, iv);
-            const encryptedRefreshToken = Buffer.concat([cipher.update(token.refreshToken as string), cipher.final()]);
-            const newCachedData = JSON.stringify({
-              refreshToken: encryptedRefreshToken.toString('hex'),
-              idToken: token.idToken,
-              expiresAt: token.expiresAt,
-              iv: iv.toString('hex'),
-            })
-            await redis.set("openchokin-" + token.sub as string, newCachedData, "EX", 60 * 60 * 24 * 30);
-            token.error = undefined;
-          } catch (e) {
-            console.error("Error refreshing token", e);
-            return { ...token, error: "RefreshAccessTokenError" as const }
-          } finally {
-            done();
           }
-        });
-      }
+          const iv = crypto.randomBytes(16);
+          const cipher = crypto.createCipheriv('aes-256-cbc', cacheKey, iv);
+          const encryptedRefreshToken = Buffer.concat([cipher.update(token.refreshToken as string), cipher.final()]);
+          const newCachedData = JSON.stringify({
+            refreshToken: encryptedRefreshToken.toString('hex'),
+            idToken: token.idToken,
+            expiresAt: token.expiresAt,
+            iv: iv.toString('hex'),
+          })
+          await redis.set("openchokin-" + token.sub as string, newCachedData, "EX", 60 * 60 * 24 * 30);
+          token.error = undefined;
+        } catch (e) {
+          console.error("Error refreshing token", e);
+          return { ...token, error: "RefreshAccessTokenError" as const }
+        } finally {
+          done();
+        }
+      });
       return token;
     },
     session: ({ session, token }: { token: JWT; session?: any }) => {
