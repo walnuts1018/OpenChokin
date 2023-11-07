@@ -259,6 +259,7 @@ export function Balance({
                           setIsEmojiPicking(true);
                         }}
                         placeholder="絵文字"
+                        readOnly={true}
                       />
                       <input
                         type="text"
