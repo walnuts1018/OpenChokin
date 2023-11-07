@@ -5,9 +5,6 @@ import Redis from 'ioredis';
 import crypto from 'crypto';
 import AsyncLock from 'async-lock';
 
-if (!process.env.REDIS_HOST || !process.env.REDIS_PASSWORD) {
-  throw new Error("Redis host or password not set");
-}
 const redis = new Redis({
   host: process.env.REDIS_HOST,
   port: 6379,
@@ -15,12 +12,8 @@ const redis = new Redis({
   db: 0,
 });
 
-
-const cachePassword = process.env.CACHE_PASSWORD;
-if (!cachePassword) {
-  throw new Error("Cache password not set");
-}
-const cacheKey = crypto.scryptSync(cachePassword, "", 32);
+const cachePassword = process.env.CACHE_PASSWORD || "password";
+const cacheKey = crypto.scryptSync(cachePassword, "salt", 32);
 
 const lock = new AsyncLock({ timeout: 10000 });
 
