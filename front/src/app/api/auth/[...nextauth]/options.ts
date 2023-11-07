@@ -44,7 +44,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role;
       }
-      lock.acquire("refreshToken" + user.sub, async function (done) {
+      lock.acquire("refreshToken" + token.sub as string, async function (done) {
         try {
           if (account) {
             token.refreshToken = account.refresh_token;
