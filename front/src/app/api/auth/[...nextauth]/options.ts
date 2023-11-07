@@ -6,10 +6,12 @@ import crypto from 'crypto';
 import AsyncLock from 'async-lock';
 
 const redis = new Redis({
-  host: process.env.REDIS_HOST,
-  port: 6379,
-  password: process.env.REDIS_PASSWORD,
-  db: 0,
+  sentinels: [{
+    host: process.env.REDIS_HOST,
+    port: 26379,
+  }],
+  sentinelPassword: process.env.REDIS_PASSWORD,
+  name: "mymaster"
 });
 
 const cachePassword = process.env.CACHE_PASSWORD || "password";
