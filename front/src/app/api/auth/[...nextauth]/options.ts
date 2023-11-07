@@ -85,6 +85,7 @@ export const authOptions: NextAuthOptions = {
               iv: iv.toString('hex'),
             })
             await redis.set("openchokin-" + token.sub as string, newCachedData, "EX", 60 * 60 * 24 * 30);
+            token.error = undefined;
           } catch (e) {
             console.error("Error refreshing token", e);
             return { ...token, error: "RefreshAccessTokenError" as const }
@@ -97,6 +98,9 @@ export const authOptions: NextAuthOptions = {
     },
     session: ({ session, token }: { token: JWT; session?: any }) => {
       session.error = token.error;
+      if (token.error === "RefreshAccessTokenError") {
+        throw new Error("RefreshAccessTokenError");
+      }
       session.user.role = token.role;
       session.user.idToken = token.idToken;
       session.user.sub = token.sub;
