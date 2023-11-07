@@ -7,6 +7,8 @@ declare module "next-auth" {
       exiresAt?: Date
       idToken?: string;
       sub?: string;
+      role?: string;
     } & DefaultSession["user"];
+    error?: string;
   }
 }
