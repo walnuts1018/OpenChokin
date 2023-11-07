@@ -1,6 +1,22 @@
 import { JWT } from "next-auth/jwt";
 import ZitadelProvider from "next-auth/providers/zitadel";
 import { NextAuthOptions } from "next-auth";
+import Redis from 'ioredis';
+import Redlock from "redlock";
+
+const redis = new Redis({
+  host: process.env.REDIS_HOST,
+  port: 6379,
+  password: process.env.REDIS_PASSWORD,
+  db: 1,
+});
+const redlock = new Redlock([redis], {
+  driftFactor: 0.01,
+  retryCount: 10,
+  retryDelay: 200,
+  retryJitter: 200,
+  automaticExtensionThreshold: 500
+});
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -26,7 +42,6 @@ export const authOptions: NextAuthOptions = {
       isNewUser?: boolean;
       session?: any;
     }) => {
-      //console.log("JWT Callback token", token);
       if (user) {
         token.role = user.role;
       }
@@ -41,16 +56,17 @@ export const authOptions: NextAuthOptions = {
           token.idToken = id_token;
           token.refreshToken = refresh_token;
           token.expiresAt = expires_at;
-          console.log("Refreshed token");
+          console.log("Refreshed token", token);
+          return token;
         } catch (e) {
-          console.error(e);
+          console.error("Error refreshing token", e);
           return { ...token, error: "RefreshAccessTokenError" as const }
         }
       }
-      //console.debug(token);
       return token;
     },
     session: ({ session, token }: { token: JWT; session?: any }) => {
+      session.error = token.error;
       session.user.role = token.role;
       session.user.idToken = token.idToken;
       session.user.sub = token.sub;
@@ -78,7 +94,7 @@ const refreshIDToken = async (refreshToken: string) => {
     }),
   });
   const data = await response.json();
-  //console.log("Data:", data);
+  //console.log("Refreshed Data:", data);
   if (!response.ok) {
     throw new Error(data.error_description || data.error || "Unknown error");
   }

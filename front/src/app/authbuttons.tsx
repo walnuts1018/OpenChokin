@@ -30,6 +30,7 @@ export const LogoutButton = () => {
   const pathname = usePathname();
   const isMypage = pathname === "/mypage";
   const [LogoutCheckIsOpen, setLogoutCheckIsOpen] = useState(false);
+
   return (
     <>
       {!isMypage ? (
