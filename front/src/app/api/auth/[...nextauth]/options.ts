@@ -12,7 +12,8 @@ const redis = new Redis({
   }],
   sentinelPassword: process.env.REDIS_PASSWORD,
   password: process.env.REDIS_PASSWORD,
-  name: "mymaster"
+  name: "mymaster",
+  db: 2,
 });
 
 const cachePassword = process.env.CACHE_PASSWORD || "password";
