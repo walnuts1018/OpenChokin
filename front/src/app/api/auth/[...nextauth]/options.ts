@@ -5,20 +5,22 @@ import Redis from 'ioredis';
 import crypto from 'crypto';
 import AsyncLock from 'async-lock';
 
+const redisSentinelPort: number = Number(process.env.REDIS_SENTINEL_PORT);
+const redisDB: number = Number(process.env.REDIS_DB);
+
 const redis = new Redis({
   sentinels: [{
     host: process.env.REDIS_SENTINEL_HOST,
-    port: Number(process.env.REDIS_SENTINEL_PORT),
+    port: redisSentinelPort,
   }],
   sentinelPassword: process.env.REDIS_PASSWORD,
   password: process.env.REDIS_PASSWORD,
-  name: process.env.REDIS_SENTINEL_NAME,
-  db: Number(process.env.REDIS_DB),
+  name: process.env.REDIS_SENTINEL_NAME || "mymaster",
+  db: redisDB,
 });
 
 const cachePassword = process.env.CACHE_PASSWORD || "password";
 const cacheKey = crypto.scryptSync(cachePassword, "salt", 32);
-
 const lock = new AsyncLock({ timeout: 10000 });
 
 export const authOptions: NextAuthOptions = {
