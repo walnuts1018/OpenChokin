@@ -11,6 +11,7 @@ const redis = new Redis({
     port: 26379,
   }],
   sentinelPassword: process.env.REDIS_PASSWORD,
+  password: process.env.REDIS_PASSWORD,
   name: "mymaster"
 });
 
