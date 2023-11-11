@@ -7,13 +7,13 @@ import AsyncLock from 'async-lock';
 
 const redis = new Redis({
   sentinels: [{
-    host: process.env.REDIS_HOST,
-    port: 26379,
+    host: process.env.REDIS_SENTINEL_HOST,
+    port: Number(process.env.REDIS_SENTINEL_PORT),
   }],
   sentinelPassword: process.env.REDIS_PASSWORD,
   password: process.env.REDIS_PASSWORD,
-  name: "mymaster",
-  db: 2,
+  name: process.env.REDIS_SENTINEL_NAME,
+  db: Number(process.env.REDIS_DB),
 });
 
 const cachePassword = process.env.CACHE_PASSWORD || "password";
