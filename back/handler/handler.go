@@ -27,6 +27,7 @@ func userMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
 func authMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Authorizationヘッダーを取得する

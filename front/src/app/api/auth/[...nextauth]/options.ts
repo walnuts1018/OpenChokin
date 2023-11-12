@@ -5,19 +5,27 @@ import Redis from 'ioredis';
 import crypto from 'crypto';
 import AsyncLock from 'async-lock';
 
-const redisSentinelPort: number = Number(process.env.REDIS_SENTINEL_PORT);
-const redisDB: number = Number(process.env.REDIS_DB);
+let redis: Redis;
 
-const redis = new Redis({
-  sentinels: [{
-    host: process.env.REDIS_SENTINEL_HOST,
-    port: redisSentinelPort,
-  }],
-  sentinelPassword: process.env.REDIS_PASSWORD,
-  password: process.env.REDIS_PASSWORD,
-  name: process.env.REDIS_SENTINEL_NAME || "mymaster",
-  db: redisDB,
-});
+if (process.env.REDIS_SENTINEL_HOST !== undefined) {
+  redis = new Redis({
+    sentinels: [{
+      host: process.env.REDIS_SENTINEL_HOST,
+      port: Number(process.env.REDIS_SENTINEL_PORT),
+    }],
+    sentinelPassword: process.env.REDIS_PASSWORD,
+    password: process.env.REDIS_PASSWORD,
+    name: process.env.REDIS_SENTINEL_NAME || "mymaster",
+    db: Number(process.env.REDIS_DB),
+  });
+} else if (process.env.REDIS_HOST !== undefined) {
+  redis = new Redis({
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
+    password: process.env.REDIS_PASSWORD,
+    db: Number(process.env.REDIS_DB),
+  });
+}
 
 const cachePassword = process.env.CACHE_PASSWORD || "password";
 const cacheKey = crypto.scryptSync(cachePassword, "salt", 32);
@@ -51,13 +59,15 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
       }
       lock.acquire("refreshToken" + token.sub as string, async function (done) {
+        console.debug("time:", new Date(), "firsttoken:", token.refreshToken);
         try {
           if (account) {
             token.refreshToken = account.refresh_token;
             token.idToken = account.id_token;
             token.expiresAt = account.expires_at;
           }
-          else if (new Date() > new Date(token.expiresAt as number * 1000)) {
+          //else if (new Date() > new Date(token.expiresAt as number * 1000)) {
+          else if (true) {
             const cachedJsonData = await redis.get("openchokin-" + token.sub as string);
             if (cachedJsonData) {
               const cachedData = JSON.parse(cachedJsonData);
@@ -66,19 +76,22 @@ export const authOptions: NextAuthOptions = {
               const decryptedRefreshToken = Buffer.concat([decipher.update(Buffer.from(cachedData.refreshToken, 'hex')), decipher.final()]);
               const cachedRefreshToken = decryptedRefreshToken.toString();
 
+
+              console.debug("time:", new Date(), "cached:", cachedRefreshToken, "token:", token.refreshToken);
               if (cachedRefreshToken === token.refreshToken) {
                 const { id_token, refresh_token, expires_at } = await refreshIDToken(token.refreshToken as string);
                 token.idToken = id_token;
                 token.refreshToken = refresh_token;
                 token.expiresAt = expires_at;
-
               } else {
+                console.debug("refresh token mismatch")
                 const cachedExpiresAt = cachedData.expiresAt;
                 const cachedIdToken = cachedData.idToken;
                 token.idToken = cachedIdToken;
                 token.refreshToken = cachedRefreshToken;
                 token.expiresAt = cachedExpiresAt;
               }
+              console.debug("time:", new Date(), "NewCached:", token.refreshToken, "NewToken:", token.refreshToken);
             }
           }
           const iv = crypto.randomBytes(16);
@@ -92,10 +105,12 @@ export const authOptions: NextAuthOptions = {
           })
           await redis.set("openchokin-" + token.sub as string, newCachedData, "EX", 60 * 60 * 24 * 30);
           token.error = undefined;
+          return token;
         } catch (e) {
           console.error("Error refreshing token", e);
           return { ...token, error: "RefreshAccessTokenError" as const }
         } finally {
+          console.debug("time:", new Date(), "finalToken:", token.refreshToken, "\n\n");
           done();
         }
       });
@@ -103,9 +118,6 @@ export const authOptions: NextAuthOptions = {
     },
     session: ({ session, token }: { token: JWT; session?: any }) => {
       session.error = token.error;
-      if (token.error === "RefreshAccessTokenError") {
-        throw new Error("RefreshAccessTokenError");
-      }
       session.user.role = token.role;
       session.user.idToken = token.idToken;
       session.user.sub = token.sub;
@@ -134,9 +146,10 @@ const refreshIDToken = async (refreshToken: string) => {
   const data = await response.json();
   //console.log("Refreshed Data:", data);
   if (!response.ok) {
+    console.debug("time:", new Date(), "refresh error", data.error_description || data.error || "Unknown error");
     throw new Error(data.error_description || data.error || "Unknown error");
   }
-
+  console.debug("token refreshed");
   return {
     id_token: data.id_token,
     refresh_token: data.refresh_token,
