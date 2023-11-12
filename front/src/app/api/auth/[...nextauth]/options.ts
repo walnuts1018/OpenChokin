@@ -66,8 +66,8 @@ export const authOptions: NextAuthOptions = {
             token.idToken = account.id_token;
             token.expiresAt = account.expires_at;
           }
-          //else if (new Date() > new Date(token.expiresAt as number * 1000)) {
-          else if (true) {
+          else if (new Date() > new Date(token.expiresAt as number * 1000)) {
+            //else if (true) {
             const cachedJsonData = await redis.get("openchokin-" + token.sub as string);
             if (cachedJsonData) {
               const cachedData = JSON.parse(cachedJsonData);
