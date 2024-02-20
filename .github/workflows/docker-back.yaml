@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - "back/**"
+      - ".github/workflows/docker-back.yaml"
     branches:
       - main
   workflow_dispatch:
