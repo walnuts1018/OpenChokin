@@ -33,9 +33,11 @@ jobs:
           - arch: "amd64"
             runs-on: ubuntu-latest
             platform: linux/amd64
+            build-arg: "arch=amd64"
           - arch: "arm64"
             runs-on: ubuntu-latest
-            platform: linux/arm64
+            platform: linux/amd64
+            build-arg: "arch=arm64"
     runs-on: ${{ matrix.runs-on }}
     outputs:
       imageTag: ${{ env.ImageTag }}
@@ -64,6 +66,7 @@ jobs:
           context: .
           file: ./back-prod.Dockerfile
           platforms: ${{ matrix.platform }}
+          build-args: ${{ matrix.build-arg }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: |

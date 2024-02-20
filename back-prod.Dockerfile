@@ -6,7 +6,9 @@ WORKDIR ${ROOT}
 COPY ./back ./
 RUN go get
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o server main.go && chmod +x ./server
+
+ARG arch=amd64
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=${arch} go build -o server main.go && chmod +x ./server
 
 FROM alpine:3
 WORKDIR /app
