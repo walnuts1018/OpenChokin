@@ -79,6 +79,7 @@ jobs:
         with:
           push: true
           context: .
+          file: ./back-prod.Dockerfile
           platforms: ${{ matrix.platform }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
