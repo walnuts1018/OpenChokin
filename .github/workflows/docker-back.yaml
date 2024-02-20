@@ -85,7 +85,7 @@ jobs:
   merge-images:
     name: Merge docker images
     runs-on: ubuntu-latest
-    needs: [build-images]
+    needs: [build-back-images]
     steps:
       - name: Check out
         uses: actions/checkout@v4
