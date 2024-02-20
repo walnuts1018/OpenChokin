@@ -95,7 +95,7 @@ jobs:
 
       - name: Merge Docker images
         run: |
-          docker buildx imagetools create --tag ghcr.io/walnuts1018/openchokin-back:latest --tag:ghcr.io/walnuts1018/openchokin-back:v0.0.0-${{ github.sha }}-${{ github.run_number }} ghcr.io/walnuts1018/openchokin-back:v0.0.0-${{ github.sha }}-${{ github.run_number }}-amd64 ghcr.io/walnuts1018/openchokin-back:v0.0.0-${{ github.sha }}-${{ github.run_number }}-arm64
+          docker buildx imagetools create --tag ghcr.io/walnuts1018/openchokin-back:latest --tag ghcr.io/walnuts1018/openchokin-back:v0.0.0-${{ github.sha }}-${{ github.run_number }} ghcr.io/walnuts1018/openchokin-back:v0.0.0-${{ github.sha }}-${{ github.run_number }}-amd64 ghcr.io/walnuts1018/openchokin-back:v0.0.0-${{ github.sha }}-${{ github.run_number }}-arm64
 
   SucceessNotification:
     if: ${{ success() }}
