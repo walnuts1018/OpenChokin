@@ -58,7 +58,9 @@ jobs:
           brew install --cask docker
 
       - name: test docker run
-        run: sudo docker run --rm hello-world
+        run: |
+          ls -al /var/run/docker.sock
+          sudo docker run --rm hello-world
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
