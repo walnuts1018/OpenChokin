@@ -59,6 +59,7 @@ jobs:
           ls -al /var/run/docker.sock
 
       - name: test docker run
+        if: runner.os == 'macos'
         run: |
           sudo /Applications/Docker.app/Contents/MacOS/Docker --unattended --install-privileged-components
           open -a /Applications/Docker.app --args --unattended --accept-license
