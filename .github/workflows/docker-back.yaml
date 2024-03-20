@@ -4,6 +4,7 @@ on:
     paths:
       - "back/**"
       - ".github/workflows/docker-back.yaml"
+      - "back-prod.Dockerfile"
     branches:
       - main
   workflow_dispatch:
